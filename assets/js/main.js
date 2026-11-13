@@ -70,6 +70,38 @@
     });
   }
 
+  /* ---------- メルマガの表示切り替え（config.js の NEWSLETTER_ENABLED） ---------- */
+  var NEWSLETTER = cfg.NEWSLETTER_ENABLED === true;
+  $$('[data-newsletter]').forEach(function (n) { n.hidden = !NEWSLETTER; });
+
+  /* ---------- 文字まわりの小さな部品 ---------- */
+  /** 「、」「。」などの直後で区切った配列を返す（折り返し位置を文節の切れ目にそろえる） */
+  function phrases(text) {
+    return (String(text || '').match(/[^、。！？!?]+[、。！？!?]*|[、。！？!?]+/g) || []).map(function (t) { return t.trim(); }).filter(Boolean);
+  }
+  function fillPhrases(node, text) {
+    node.textContent = '';
+    phrases(text).forEach(function (t) { node.appendChild(el('span', { text: t })); });
+  }
+  /** 名前の上に、姓・名ごとのふりがなを添える（分け方が合わないときは1行で添える） */
+  function renderName(h1, name, kana) {
+    var n = String(name || '').trim().split(/\s+/), k = String(kana || '').trim().split(/\s+/);
+    if (!n[0]) return;
+    h1.textContent = '';
+    h1.setAttribute('aria-label', name + (kana ? '（' + kana + '）' : ''));
+    if (kana && n.length === k.length) {
+      n.forEach(function (part, i) {
+        h1.appendChild(el('span', { class: 'np', 'aria-hidden': 'true' }, [el('span', { class: 'np-kana', text: k[i] }), el('span', { class: 'np-kanji', text: part })]));
+      });
+    } else {
+      if (kana) h1.appendChild(el('span', { class: 'np-kana np-kana-line', 'aria-hidden': 'true', text: kana }));
+      h1.appendChild(el('span', { class: 'np-kanji', 'aria-hidden': 'true', text: name }));
+    }
+  }
+  /** 「【要入力】」だけの値は、まだ公開しない項目として扱う */
+  function isTodo(v) { return /^\s*(【要入力】)?\s*$/.test(String(v == null ? '' : v)); }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
   /* ---------- 描画 ---------- */
   function render(d) {
     var s = d.settings || {};
@@ -79,46 +111,90 @@
       if (v != null && v !== '') n.textContent = v; else if (!n.textContent.trim()) n.hidden = true;
     });
     if (s.candidate_name) document.title = s.candidate_name + ' | 活動報告・政策';
-    var photo = safeUrl(s.photo_url);
-    if (photo) $('#photo').src = photo;
-    $('#photo').alt = (s.candidate_name || '') + 'の写真';
 
-    // プロフィール
-    $('#bio').textContent = s.bio || '';
+    // ファーストビュー
+    renderName($('#hero-name'), s.candidate_name, s.candidate_kana);
+    if (s.catchphrase) {
+      fillPhrases($('#hero-catch'), s.catchphrase);
+      fillPhrases($('#hero-vcatch'), s.catchphrase);
+      var longest = Math.max.apply(null, phrases(s.catchphrase).map(function (t) { return t.length; }));
+      $('#hero-vcatch').style.setProperty('--n', String(Math.max(longest, 6)));
+    } else {
+      // ひと言がないときは、藍鼠の面に名前を縦書きで置く
+      $('#hero-catch').hidden = true;
+      $('#hero-vcatch').textContent = s.candidate_name || '';
+    }
+    // 写真：読み込めたときだけ表示する（空・読み込み失敗のときは、藍鼠の面のデザインのまま）
+    // photo_url は、https の URL か、このサイト内の画像（例：assets/img/hero.jpg）
+    var rawPhoto = String(s.photo_url || '').trim();
+    var photo = /^assets\/img\/[\w.\-\/]+\.(jpe?g|png|webp|avif)$/i.test(rawPhoto) && rawPhoto.indexOf('..') < 0 ? rawPhoto : safeUrl(rawPhoto);
+    var img = $('#photo');
+    if (photo) {
+      img.alt = (s.candidate_name || '').replace(/\s+/g, '');
+      img.addEventListener('load', function () { img.hidden = false; $('#hero').classList.add('has-photo'); });
+      img.src = photo;
+    }
+
+    // ごあいさつ（空行で段落を分ける）
+    var bio = $('#bio');
+    String(s.bio || '').split(/\n\s*\n/).forEach(function (para) {
+      if (para.trim()) bio.appendChild(el('p', { text: para.trim() }));
+    });
+
+    // プロフィール（「／」で区切られた値は、行を分けて並べる）
     var facts = $('#facts');
     (d.profile || []).forEach(function (r) {
-      if (!r.label && !r.value) return;
-      facts.appendChild(el('div', {}, [el('dt', { text: r.label }), el('dd', { text: r.value })]));
-    });
-    if (!facts.children.length) facts.hidden = true;
-
-    // 政策
-    var pol = $('#policies');
-    (d.policies || []).forEach(function (p) {
-      pol.appendChild(el('li', { class: 'policy' }, [
-        el('h3', { text: p.title }),
-        p.summary ? el('p', { class: 'summary', text: p.summary }) : null,
-        p.detail ? el('p', { class: 'detail', text: p.detail }) : null,
+      if (!r.label || isTodo(r.value)) return;
+      var parts = String(r.value).split('／').map(function (t) { return t.trim(); }).filter(Boolean);
+      facts.appendChild(el('div', {}, [
+        el('dt', { text: r.label }),
+        el('dd', {}, parts.map(function (t) { return el('span', { text: t }); })),
       ]));
     });
+    if (!facts.children.length) $('#profile').hidden = true;
 
-    // 年表
+    // 目指すこと
+    var pol = $('#policies');
+    (d.policies || []).forEach(function (p, i) {
+      if (!p.title) return;
+      pol.appendChild(el('li', { class: 'policy', 'data-reveal': '' }, [
+        el('span', { class: 'policy-num', 'aria-hidden': 'true', text: pad2(i + 1) }),
+        el('h3', { text: p.title }),
+        el('div', { class: 'policy-text' }, [
+          p.summary ? el('p', { class: 'summary', text: p.summary }) : null,
+          p.detail ? el('p', { class: 'detail', text: p.detail }) : null,
+        ]),
+      ]));
+    });
+    if (!pol.children.length) $('#vision').hidden = true;
+
+    // 年表（「2014年」「2026年2月」は、年の数字を大きく見せる）
     var tl = $('#timeline');
     (d.history || []).forEach(function (h) {
-      tl.appendChild(el('li', {}, [
-        el('span', { class: 'date', text: h.date }),
-        el('h3', { text: h.title }),
-        h.detail ? el('p', { text: h.detail }) : null,
+      if (!h.date && !h.title) return;
+      var m = /^(\d{4})年\s*(.*)$/.exec(String(h.date || '').trim());
+      var date = m
+        ? el('p', { class: 'tl-date' }, [el('span', { class: 'tl-year', text: m[1] }), el('span', { class: 'tl-rest', text: '年' + m[2] })])
+        : el('p', { class: 'tl-date tl-date-plain', text: h.date });
+      tl.appendChild(el('li', { 'data-reveal': '' }, [
+        date,
+        el('div', { class: 'tl-body' }, [
+          el('h3', { text: h.title }),
+          h.detail ? el('p', { text: h.detail }) : null,
+        ]),
       ]));
     });
+    if (!tl.children.length) $('#history').hidden = true;
 
     renderPosts(d.posts || []);
     renderSns(d.sns || [], d.instagram || []);
 
-    // フッター
-    if (s.office_tel) $('#f-tel').appendChild(el('a', { href: 'tel:' + s.office_tel.replace(/[^\d+]/g, ''), text: 'TEL ' + s.office_tel }));
-    if (s.office_email) $('#f-mail').appendChild(el('a', { href: 'mailto:' + s.office_email, text: s.office_email }));
+    // フッター（連絡先の表示欄）
+    if (s.office_tel) { $('#f-tel').textContent = ''; $('#f-tel').appendChild(el('a', { href: 'tel:' + s.office_tel.replace(/[^\d+]/g, ''), text: s.office_tel })); }
+    if (s.office_email) { $('#f-mail').textContent = ''; $('#f-mail').appendChild(el('a', { href: 'mailto:' + s.office_email, text: s.office_email })); }
     $('#year').textContent = new Date().getFullYear();
+
+    observeReveal();
   }
 
   var allPosts = [], shown = 0;
@@ -127,30 +203,47 @@
     var box = $('#posts');
     if (!posts.length) { box.appendChild(el('p', { class: 'empty', text: '活動報告は準備中です。' })); return; }
     showMorePosts();
-    $('#more-posts').addEventListener('click', showMorePosts);
+    $('#more-posts').addEventListener('click', function () {
+      var count = box.children.length;
+      showMorePosts();
+      // 追加した最初の記事へフォーカスを移す（キーボード・読み上げで続きから読めるように）
+      if (box.children[count]) box.children[count].focus();
+    });
     openFromHash();
     window.addEventListener('hashchange', openFromHash);
+  }
+  /** 日付を「2026 / 11.10」の形で組む（読み上げ用に和文の日付も持たせる） */
+  function dateNode(s) {
+    var m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(s || ''));
+    if (!m) return el('time', { class: 'post-date', text: String(s || '') });
+    return el('time', { class: 'post-date', datetime: m[0], 'aria-label': formatDate(s) }, [
+      el('span', { class: 'y', 'aria-hidden': 'true', text: m[1] }),
+      el('span', { class: 'md', 'aria-hidden': 'true', text: pad2(Number(m[2])) + '.' + pad2(Number(m[3])) }),
+    ]);
   }
   function showMorePosts() {
     var box = $('#posts');
     allPosts.slice(shown, shown + POSTS_PER_PAGE).forEach(function (p) {
       var img = safeUrl(p.image_url);
-      box.appendChild(el('button', { class: 'post-card', type: 'button', onclick: function () { openPost(p, true); } }, [
-        el('div', { class: 'thumb' }, [img ? el('img', { src: img, alt: '', loading: 'lazy' }) : 'REPORT']),
-        el('div', { class: 'body' }, [
-          el('time', { datetime: p.date, text: formatDate(p.date) }),
-          el('h3', { text: p.title }),
-          el('p', { text: p.body }),
+      box.appendChild(el('button', { class: 'post-row' + (img ? ' has-thumb' : ''), type: 'button', 'data-reveal': '', onclick: function () { openPost(p, true); } }, [
+        dateNode(p.date),
+        el('span', { class: 'post-main' }, [
+          el('span', { class: 'post-title', text: p.title }),
+          p.body ? el('span', { class: 'post-excerpt', text: String(p.body).replace(/\s+/g, ' ').slice(0, 120) }) : null,
         ]),
+        img ? el('span', { class: 'post-thumb' }, [el('img', { src: img, alt: '', loading: 'lazy', width: '160', height: '120' })]) : null,
+        el('span', { class: 'post-arrow', 'aria-hidden': 'true' }),
       ]));
     });
     shown += POSTS_PER_PAGE;
     $('#more-posts').hidden = shown >= allPosts.length;
+    observeReveal();
   }
 
   function openPost(p, pushHash) {
     var dlg = $('#post-dialog');
     $('#pd-date').textContent = formatDate(p.date);
+    $('#pd-date').setAttribute('datetime', String(p.date || ''));
     $('#pd-title').textContent = p.title;
     var img = safeUrl(p.image_url), link = safeUrl(p.link_url);
     $('#pd-img').hidden = !img; if (img) $('#pd-img').src = img;
@@ -174,20 +267,24 @@
     var links = $('#sns-links'), mini = $('#sns-mini');
     sns.forEach(function (r) {
       var url = safeUrl(r.url); if (!url) return;
-      var icon = ICONS[r.platform] || ICONS.web;
-      links.appendChild(el('li', {}, [el('a', { href: url, target: '_blank', rel: 'noopener' }, [el('span', { html: icon, style: 'display:flex' }), r.label || r.platform])]));
-      mini.appendChild(el('li', {}, [el('a', { href: url, target: '_blank', rel: 'noopener', 'aria-label': r.label || r.platform, html: icon })]));
+      var icon = ICONS[r.platform] || ICONS.web, label = r.label || r.platform;
+      links.appendChild(el('li', {}, [el('a', { href: url, target: '_blank', rel: 'noopener' }, [
+        el('span', { class: 'sns-icon', html: icon }),
+        el('span', { class: 'sns-label', text: label }),
+        el('span', { class: 'sr-only', text: '（新しいタブで開きます）' }),
+        el('span', { class: 'sns-out', 'aria-hidden': 'true' }),
+      ])]));
+      mini.appendChild(el('li', {}, [el('a', { href: url, target: '_blank', rel: 'noopener', 'aria-label': label + '（新しいタブで開きます）', html: icon })]));
     });
+    if (!links.children.length) {
+      $('#sns-note').textContent = 'SNSは準備中です。'; $('#sns-note').hidden = false;
+      links.hidden = true; mini.hidden = true;
+    }
 
     var grid = $('#ig-grid');
     var urls = igPosts.map(function (r) { return safeUrl(r.url); }).filter(function (u) { return /instagram\.com\/(p|reel|tv)\//.test(u); });
-    if (!urls.length) {
-      var ig = sns.filter(function (r) { return r.platform === 'instagram' && safeUrl(r.url); })[0];
-      grid.appendChild(el('p', { class: 'ig-empty' }, ig
-        ? ['日々の様子は ', el('a', { href: ig.url, target: '_blank', rel: 'noopener', text: 'Instagram' }), ' でご覧いただけます。']
-        : ['SNSの投稿は準備中です。']));
-      return;
-    }
+    if (!urls.length) return;
+    grid.hidden = false;
     urls.forEach(function (u) {
       var clean = u.split('?')[0];
       grid.appendChild(el('blockquote', { class: 'instagram-media', 'data-instgrm-permalink': clean, 'data-instgrm-version': '14' }, [
@@ -201,7 +298,8 @@
   }
 
   /* ---------- メルマガ登録 ---------- */
-  $('#nl-form').addEventListener('submit', function (e) {
+  var nlForm = $('#nl-form');
+  if (nlForm) nlForm.addEventListener('submit', function (e) {
     e.preventDefault();
     var f = e.target, status = $('#nl-status'), btn = f.querySelector('button[type=submit]');
     function show(msg, ok) { status.textContent = msg; status.className = 'nl-status ' + (ok ? 'ok' : 'err'); }
@@ -230,16 +328,43 @@
 
   /* ---------- スマホメニュー ---------- */
   var menuBtn = $('.menu-btn'), nav = $('#gnav');
-  menuBtn.addEventListener('click', function () {
-    var open = nav.classList.toggle('open');
+  function setMenu(open) {
+    nav.classList.toggle('open', open);
+    document.documentElement.classList.toggle('menu-open', open);
     menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
+  }
+  menuBtn.addEventListener('click', function () { setMenu(!nav.classList.contains('open')); });
+  $$('a', nav).forEach(function (a) { a.addEventListener('click', function () { setMenu(false); }); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && nav.classList.contains('open')) { setMenu(false); menuBtn.focus(); }
   });
-  $$('a', nav).forEach(function (a) {
-    a.addEventListener('click', function () { nav.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false'); });
-  });
+  // 画面を広げたら、開いたままのメニューを閉じる
+  if (window.matchMedia) {
+    var wide = window.matchMedia('(min-width: 960px)');
+    var onWide = function (e) { if (e.matches) setMenu(false); };
+    if (wide.addEventListener) wide.addEventListener('change', onWide); else if (wide.addListener) wide.addListener(onWide);
+  }
+
+  /* ---------- スクロールに合わせた、控えめなフェードイン ---------- */
+  var revealIO = null;
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function observeReveal() {
+    var nodes = $$('[data-reveal]:not(.is-in)');
+    if (reduceMotion || !('IntersectionObserver' in window)) { nodes.forEach(function (n) { n.classList.add('is-in'); }); return; }
+    if (!revealIO) {
+      revealIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { en.target.classList.add('is-in'); revealIO.unobserve(en.target); }
+        });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+    }
+    nodes.forEach(function (n) { revealIO.observe(n); });
+  }
 
   loadContent().then(render).catch(function (err) {
     console.error(err);
+    $$('[data-reveal]').forEach(function (n) { n.classList.add('is-in'); });
     $('#posts').appendChild(el('p', { class: 'empty', text: '内容を読み込めませんでした。ページを再読み込みしてください。' }));
   });
 })();
