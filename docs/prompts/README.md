@@ -12,6 +12,7 @@
 |---|---|---|---|
 | 1 | `01-design-research.md` | デザイン性の高い政治家サイトのリサーチ | `docs/prompts/01-design-research.md を読んで、その指示どおりに実行してください。` |
 | 2 | `02-morita-research.md` | 森田浩文さんの公開情報リサーチ | `docs/prompts/02-morita-research.md を読んで、その指示どおりに実行してください。` |
+| 2b | `02b-morita-facebook-chrome.md` | Facebook を Claude in Chrome で調べる（2のあとに。Chrome とログインが必要） | `docs/prompts/02b-morita-facebook-chrome.md を読んで、その指示どおりに実行してください。` |
 | 3 | `03-redesign.md` | サイトのリニューアル（1・2の結果を見てから） | `docs/prompts/03-redesign.md を読んで、その指示どおりに実行してください。デザインの方向性は「（A/B/C のどれか）」でお願いします。` |
 
 - 1 と 2 は、どちらを先にやっても大丈夫です。
