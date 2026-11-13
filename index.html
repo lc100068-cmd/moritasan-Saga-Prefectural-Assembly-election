@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>森田 浩文 | 活動報告・政策</title>
 <meta name="description" content="森田浩文のこれまでの活動と、目指すことをお伝えするサイトです。">
-<meta name="theme-color" content="#F7F5F0">
+<meta name="theme-color" content="#0F1A24">
 <meta property="og:type" content="website">
 <meta property="og:title" content="森田 浩文 | 活動報告・政策">
 <meta property="og:description" content="森田浩文のこれまでの活動と、目指すことをお伝えするサイトです。">
@@ -13,10 +13,25 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
-<script>document.documentElement.className = 'js';</script>
+<script>
+  // 動きの準備：JS が動くとき「js」、最初の1回だけオープニング（動きを減らす設定のときは出さない）
+  (function () {
+    var d = document.documentElement, intro = false;
+    try { intro = !sessionStorage.getItem('intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    d.className = 'js' + (intro ? ' is-intro' : ' is-ready');
+  })();
+</script>
 </head>
 <body>
 <a class="skip" href="#main">本文へ移動</a>
+
+<!-- オープニング（最初の1回だけ。飾りなので読み上げない） -->
+<div class="intro" id="intro" aria-hidden="true">
+  <p class="intro-name" data-bind="candidate_name">森田 浩文</p>
+  <span class="intro-line"></span>
+</div>
+<!-- 読み進んだ量を示す細い線 -->
+<div class="progress" aria-hidden="true"><span id="progress"></span></div>
 
 <header class="site-header" id="top">
   <div class="header-inner">
@@ -38,8 +53,13 @@
 </header>
 
 <main id="main">
-  <!-- ファーストビュー：名前・ひと言・ボタン1つ・写真（写真がない間は藍鼠の面＋縦書きのひと言） -->
+  <!-- ファーストビュー：特大の名前・ひと言・ボタン1つ・写真。背景に、風にゆれる稲穂のアニメーション -->
   <section class="hero" id="hero" aria-labelledby="hero-name">
+    <div class="hero-visual">
+      <img class="hero-photo" id="photo" alt="" width="1200" height="1500" decoding="async" fetchpriority="high" hidden>
+      <p class="hero-vcatch" id="hero-vcatch"></p>
+    </div>
+    <canvas class="hero-field" id="field" aria-hidden="true"></canvas>
     <div class="hero-text">
       <p class="hero-eyebrow">
         <span data-bind="election_label"></span>
@@ -49,22 +69,23 @@
         <h1 class="hero-name" id="hero-name">森田 浩文</h1>
         <p class="hero-catch" id="hero-catch"></p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#vision">目指すことを読む<span class="btn-arrow" aria-hidden="true"></span></a>
+          <a class="btn btn-primary" href="#vision"><span class="btn-label">目指すことを読む</span><span class="btn-arrow" aria-hidden="true"></span></a>
           <a class="text-link" href="#newsletter" data-newsletter hidden>活動報告をメールで受け取る</a>
         </div>
       </div>
     </div>
-    <div class="hero-visual">
-      <p class="hero-vcatch" id="hero-vcatch"></p>
-      <img class="hero-photo" id="photo" alt="" width="1200" height="1500" decoding="async" fetchpriority="high" hidden>
-    </div>
+    <p class="hero-scroll" aria-hidden="true"><span>SCROLL</span></p>
   </section>
+
+  <!-- 流れる文字の帯（飾り。内容はひと言・選挙区と同じ） -->
+  <div class="marquee" id="marquee" aria-hidden="true"><div class="marquee-track" id="marquee-track"></div></div>
 
   <!-- ごあいさつ -->
   <section class="section greeting" id="greeting" aria-labelledby="greeting-h">
     <div class="wrap greeting-grid">
       <header class="greeting-head" data-reveal>
-        <h2 id="greeting-h">ごあいさつ</h2>
+        <p class="sec-no" aria-hidden="true">01</p>
+        <h2 id="greeting-h" data-split>ごあいさつ</h2>
       </header>
       <div class="greeting-body" data-reveal>
         <p class="greeting-lead" data-bind="lead"></p>
@@ -74,11 +95,16 @@
     </div>
   </section>
 
+  <!-- 数字で見る活動（data/site.json の highlights があるときだけ表示） -->
+  <section class="stats" id="stats" aria-label="数字で見る活動" hidden>
+    <div class="wrap"><ul class="stats-list" id="stats-list"></ul></div>
+  </section>
+
   <!-- プロフィール -->
   <section class="section profile" id="profile" aria-labelledby="profile-h">
     <div class="wrap profile-grid">
       <header class="profile-head" data-reveal>
-        <h2 id="profile-h">プロフィール</h2>
+        <h2 id="profile-h" data-split>プロフィール</h2>
         <p class="profile-name">
           <span data-bind="candidate_name">森田 浩文</span>
           <small data-bind="candidate_kana"></small>
@@ -92,7 +118,8 @@
   <section class="section vision" id="vision" aria-labelledby="vision-h">
     <div class="wrap">
       <header class="vision-head" data-reveal>
-        <h2 id="vision-h">目指すこと</h2>
+        <p class="sec-no" aria-hidden="true">02</p>
+        <h2 id="vision-h" data-split>目指すこと</h2>
       </header>
       <ol class="policies" id="policies"></ol>
     </div>
@@ -102,7 +129,8 @@
   <section class="section history" id="history" aria-labelledby="history-h">
     <div class="wrap history-grid">
       <header class="history-head" data-reveal>
-        <h2 id="history-h">これまでの活動</h2>
+        <p class="sec-no" aria-hidden="true">03</p>
+        <h2 id="history-h" data-split>これまでの活動</h2>
       </header>
       <div class="history-body">
         <ol class="timeline" id="timeline"></ol>
@@ -115,7 +143,8 @@
   <section class="section reports" id="reports" aria-labelledby="reports-h">
     <div class="wrap">
       <header class="reports-head" data-reveal>
-        <h2 id="reports-h">活動報告</h2>
+        <div><p class="sec-no" aria-hidden="true">04</p>
+        <h2 id="reports-h" data-split>活動報告</h2></div>
         <p>日々の活動を、新しい順にお伝えします。</p>
       </header>
       <div class="posts" id="posts"></div>
@@ -130,7 +159,7 @@
   <section class="section sns" id="sns" aria-labelledby="sns-h">
     <div class="wrap sns-grid">
       <header class="sns-head" data-reveal>
-        <h2 id="sns-h">SNSでも<wbr>発信しています</h2>
+        <h2 id="sns-h"><span>SNSでも</span><span>発信しています</span></h2>
       </header>
       <div class="sns-body" data-reveal>
         <ul class="sns-links" id="sns-links"></ul>
@@ -144,7 +173,7 @@
   <section class="section newsletter" id="newsletter" aria-labelledby="newsletter-h" data-newsletter hidden>
     <div class="wrap newsletter-grid">
       <header class="newsletter-head">
-        <h2 id="newsletter-h">活動報告を<wbr>メールで受け取る</h2>
+        <h2 id="newsletter-h"><span>活動報告を</span><span>メールで受け取る</span></h2>
         <p class="nl-lead" data-bind="newsletter_lead"></p>
       </header>
       <form class="nl-form" id="nl-form" novalidate>
@@ -173,6 +202,7 @@
 </main>
 
 <footer class="site-footer">
+  <p class="footer-name" aria-hidden="true" data-bind="candidate_name">森田 浩文</p>
   <div class="wrap footer-inner">
     <div class="footer-office">
       <p class="f-name" data-bind="office_name"></p>

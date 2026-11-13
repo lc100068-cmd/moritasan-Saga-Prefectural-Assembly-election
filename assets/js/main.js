@@ -83,19 +83,49 @@
     node.textContent = '';
     phrases(text).forEach(function (t) { node.appendChild(el('span', { text: t })); });
   }
+  /**
+   * 文字を1文字ずつ span に分ける（動きをつけるため）。
+   * inner が true のときは <span class="ch"><span>字</span></span>（下からせり上がる動き用）。
+   * 読み上げには影響しないよう、呼び出し側で aria-label / aria-hidden をつける。
+   */
+  function splitChars(node, start, inner) {
+    var text = node.textContent, i = start || 0;
+    node.textContent = '';
+    Array.from(text).forEach(function (c) {
+      if (/\s/.test(c)) { node.appendChild(document.createTextNode(c)); return; }
+      var ch = el('span', { class: 'ch', style: '--i:' + (i++) }, inner ? [el('span', { text: c })] : [c]);
+      node.appendChild(ch);
+    });
+    return i;
+  }
+  /** 見出し：文字が下から1文字ずつ上がる（読み上げは元の文のまま） */
+  function splitHeading(h) {
+    var label = h.textContent.trim();
+    var wrap = el('span', { class: 'split', 'aria-hidden': 'true', text: label });
+    splitChars(wrap, 0, true);
+    h.textContent = ''; h.setAttribute('aria-label', label); h.appendChild(wrap);
+    h.setAttribute('data-reveal', '');
+  }
+  $$('[data-split]').forEach(splitHeading);
+
   /** 名前の上に、姓・名ごとのふりがなを添える（分け方が合わないときは1行で添える） */
   function renderName(h1, name, kana) {
     var n = String(name || '').trim().split(/\s+/), k = String(kana || '').trim().split(/\s+/);
     if (!n[0]) return;
     h1.textContent = '';
     h1.setAttribute('aria-label', name + (kana ? '（' + kana + '）' : ''));
+    var idx = 0;
     if (kana && n.length === k.length) {
       n.forEach(function (part, i) {
-        h1.appendChild(el('span', { class: 'np', 'aria-hidden': 'true' }, [el('span', { class: 'np-kana', text: k[i] }), el('span', { class: 'np-kanji', text: part })]));
+        var kanji = el('span', { class: 'np-kanji', text: part });
+        idx = splitChars(kanji, idx, true);
+        h1.appendChild(el('span', { class: 'np', 'aria-hidden': 'true' }, [el('span', { class: 'np-kana', text: k[i] }), kanji]));
       });
     } else {
       if (kana) h1.appendChild(el('span', { class: 'np-kana np-kana-line', 'aria-hidden': 'true', text: kana }));
-      h1.appendChild(el('span', { class: 'np-kanji', 'aria-hidden': 'true', text: name }));
+      var all = el('span', { class: 'np-kanji', 'aria-hidden': 'true', text: name });
+      splitChars(all, 0, true);
+      h1.appendChild(all);
     }
   }
   /** 「【要入力】」だけの値は、まだ公開しない項目として扱う */
@@ -116,7 +146,10 @@
     renderName($('#hero-name'), s.candidate_name, s.candidate_kana);
     if (s.catchphrase) {
       fillPhrases($('#hero-catch'), s.catchphrase);
-      fillPhrases($('#hero-vcatch'), s.catchphrase);
+      var vc = $('#hero-vcatch'), vi = 0;
+      fillPhrases(vc, s.catchphrase);
+      vc.setAttribute('aria-label', s.catchphrase);
+      $$('span', vc).forEach(function (seg) { seg.setAttribute('aria-hidden', 'true'); vi = splitChars(seg, vi, false); });
       var longest = Math.max.apply(null, phrases(s.catchphrase).map(function (t) { return t.length; }));
       $('#hero-vcatch').style.setProperty('--n', String(Math.max(longest, 6)));
     } else {
@@ -131,9 +164,35 @@
     var img = $('#photo');
     if (photo) {
       img.alt = (s.candidate_name || '').replace(/\s+/g, '');
-      img.addEventListener('load', function () { img.hidden = false; $('#hero').classList.add('has-photo'); });
+      img.addEventListener('load', function () { img.hidden = false; $('#hero').classList.add('has-photo'); if (window.__field) window.__field.resize(); });
       img.src = photo;
     }
+
+    // 流れる文字の帯（ひと言と選挙区をくり返す）
+    buildMarquee([s.catchphrase, s.district, s.candidate_name].filter(Boolean));
+
+    // リード文：読み進むにつれて濃くなる（1文字ずつに分ける。読み上げは元の文のまま）
+    var lead = $('.greeting-lead');
+    if (lead && s.lead && !reduceMotion) {
+      var leadInner = el('span', { 'aria-hidden': 'true', text: s.lead });
+      splitChars(leadInner, 0, false);
+      lead.textContent = ''; lead.appendChild(el('span', { class: 'sr-only', text: s.lead })); lead.appendChild(leadInner);
+      leadChars = $$('.ch', leadInner);
+    }
+
+    // 数字で見る活動（highlights があるときだけ）
+    var stats = $('#stats-list');
+    (d.highlights || []).forEach(function (h, i) {
+      if (!h || h.value == null || h.value === '') return;
+      stats.appendChild(el('li', { 'data-reveal': '', style: '--d:' + (i * 0.12) + 's' }, [
+        el('p', { class: 'stat-figure' }, [
+          el('span', { class: 'stat-value', 'data-count': String(h.value), text: String(h.value) }),
+          h.unit ? el('span', { class: 'stat-unit', text: h.unit }) : null,
+        ]),
+        h.label ? el('p', { class: 'stat-label', text: h.label }) : null,
+      ]));
+    });
+    $('#stats').hidden = !stats.children.length;
 
     // ごあいさつ（空行で段落を分ける）
     var bio = $('#bio');
@@ -195,6 +254,7 @@
     $('#year').textContent = new Date().getFullYear();
 
     observeReveal();
+    onScroll();
   }
 
   var allPosts = [], shown = 0;
@@ -346,21 +406,221 @@
     if (wide.addEventListener) wide.addEventListener('change', onWide); else if (wide.addListener) wide.addListener(onWide);
   }
 
-  /* ---------- スクロールに合わせた、控えめなフェードイン ---------- */
+  /* ============================================================
+   * 動き
+   * ============================================================ */
+  var root = document.documentElement;
+  var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var leadChars = [], leadOn = 0;
+
+  /* ---------- スクロールで現れる ---------- */
   var revealIO = null;
-  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function observeReveal() {
     var nodes = $$('[data-reveal]:not(.is-in)');
     if (reduceMotion || !('IntersectionObserver' in window)) { nodes.forEach(function (n) { n.classList.add('is-in'); }); return; }
     if (!revealIO) {
       revealIO = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) {
-          if (en.isIntersecting) { en.target.classList.add('is-in'); revealIO.unobserve(en.target); }
+          if (!en.isIntersecting) return;
+          en.target.classList.add('is-in'); revealIO.unobserve(en.target);
+          $$('[data-count]', en.target).forEach(countUp);
         });
-      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+      }, { rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
     }
     nodes.forEach(function (n) { revealIO.observe(n); });
   }
+
+  /* ---------- 数字が数え上がる ---------- */
+  function countUp(node) {
+    var to = Number(node.getAttribute('data-count'));
+    if (reduceMotion || !isFinite(to) || node.__done) return;
+    node.__done = true;
+    var t0 = null, dur = 1600;
+    function step(t) {
+      if (t0 == null) t0 = t;
+      var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 4);
+      node.textContent = String(Math.round(to * e));
+      if (p < 1) requestAnimationFrame(step);
+    }
+    node.textContent = '0';
+    requestAnimationFrame(step);
+  }
+
+  /* ---------- 流れる文字の帯 ---------- */
+  var marquee = { track: $('#marquee-track'), x: 0, unit: 0, boost: 0 };
+  function buildMarquee(words) {
+    if (!words.length) { $('#marquee').hidden = true; return; }
+    marquee.track.textContent = '';
+    for (var r = 0; r < 4; r++) words.forEach(function (w) { marquee.track.appendChild(el('span', { class: 'marquee-item', text: w })); });
+    marquee.words = words.length;
+    measureMarquee();
+  }
+  function measureMarquee() {
+    var items = marquee.track.children;
+    if (!items.length) return;
+    // くり返し1回ぶんの幅
+    marquee.unit = items[marquee.words] ? items[marquee.words].offsetLeft - items[0].offsetLeft : 0;
+  }
+
+  /* ---------- スクロールに連動するもの（読み進んだ線・ヘッダー・リード文・年表の線） ---------- */
+  var lastY = window.scrollY, ticking = false;
+  function onScroll() {
+    var y = window.scrollY, vh = window.innerHeight;
+    var max = document.documentElement.scrollHeight - vh;
+    $('#progress').style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
+
+    var hero = $('#hero');
+    $('.site-header').classList.toggle('is-solid', y > hero.offsetHeight - 80);
+
+    marquee.boost += Math.max(-60, Math.min(60, y - lastY));
+    lastY = y;
+
+    if (leadChars.length) {
+      var r = leadChars[0].parentNode.getBoundingClientRect();
+      var p = (vh * 0.88 - r.top) / (r.height + vh * 0.38);
+      var n = Math.max(0, Math.min(leadChars.length, Math.round(p * leadChars.length)));
+      for (; leadOn < n; leadOn++) leadChars[leadOn].classList.add('on');
+      for (; leadOn > n; leadOn--) leadChars[leadOn - 1].classList.remove('on');
+    }
+
+    var tl = $('#timeline');
+    if (tl && tl.children.length) {
+      var tr = tl.getBoundingClientRect();
+      tl.style.setProperty('--p', String(Math.max(0, Math.min(1, (vh * 0.7 - tr.top) / tr.height))));
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+
+  /* ---------- 稲穂が風にゆれる（canvas） ---------- */
+  function Field(canvas) {
+    var ctx = canvas.getContext('2d'), W = 0, H = 0, stalks = [], pointer = { x: -9999, v: 0 }, visible = true, self = this;
+    function rnd(a, b) { return a + Math.random() * (b - a); }
+    function smooth(a, b, x) { x = Math.max(0, Math.min(1, (x - a) / (b - a))); return x * x * (3 - 2 * x); }
+    this.resize = function () {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = canvas.clientWidth; H = canvas.clientHeight;
+      if (!W || !H) return;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var wide = W >= 900, hasPhoto = $('#hero').classList.contains('has-photo');
+      var count = Math.max(46, Math.min(190, Math.round(W / (wide ? 8 : 6.5))));
+      stalks = [];
+      for (var i = 0; i < count; i++) {
+        var x = rnd(-20, W + 20), u = x / W, z = Math.random();
+        // 背の高さ：PC は左（文字の下）を低く、右へ行くほど高く。スマホは面の下半分に
+        var prof = wide ? (0.1 + (hasPhoto ? 0.36 : 0.27) * smooth(0.3, 0.95, u)) : (hasPhoto ? 0.2 : 0.27 + 0.08 * Math.sin(u * 5));
+        stalks.push({
+          x: x, z: z, h: H * prof * rnd(0.55, 1) * (0.62 + 0.38 * z), lean: rnd(-0.07, 0.07), ph: rnd(0, 6.28),
+          grains: Math.round(rnd(8, 14)), ear: rnd(26, 46) * (0.6 + 0.5 * z) * (wide ? 1.15 : 0.9), side: Math.random() < 0.5 ? -1 : 1,
+          leaf: rnd(0.3, 0.6), leafLen: rnd(24, 60),
+        });
+      }
+      stalks.sort(function (a, b) { return a.z - b.z; });
+      self.draw(performance.now());
+    };
+    this.draw = function (t) {
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      pointer.v *= 0.94;
+      for (var i = 0; i < stalks.length; i++) {
+        var s = stalks[i];
+        // 風：ゆっくりした大きな波＋細かい波。ポインターの動きで、近くの穂がなびく
+        var wind = Math.sin(t * 0.0009 + s.x * 0.0052 + s.ph * 0.25) * 0.55 + Math.sin(t * 0.0017 + s.x * 0.012 + s.ph) * 0.3;
+        var dx = (s.x - pointer.x) / 160;
+        wind += pointer.v * Math.exp(-dx * dx) * 0.05;
+        var bend = (wind * 0.13 + s.lean + 0.05) * s.h;
+        var bx = s.x, by = H + 4, tx = s.x + bend, ty = H - s.h;
+        var cx = s.x + bend * 0.12, cy = H - s.h * 0.55;
+        var a = 0.16 + s.z * 0.62;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = 'rgba(206,196,150,' + a + ')';
+        ctx.lineWidth = 0.7 + s.z * 0.9;
+        ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo(cx, cy, tx, ty); ctx.stroke();
+        // 葉
+        var lt = s.leaf, lx = (1 - lt) * (1 - lt) * bx + 2 * (1 - lt) * lt * cx + lt * lt * tx, ly = (1 - lt) * (1 - lt) * by + 2 * (1 - lt) * lt * cy + lt * lt * ty;
+        ctx.beginPath(); ctx.moveTo(lx, ly);
+        ctx.quadraticCurveTo(lx + s.side * s.leafLen * 0.5 + bend * 0.2, ly - s.leafLen * 0.7, lx + s.side * s.leafLen + bend * 0.5, ly - s.leafLen * 0.35 + Math.abs(wind) * 6);
+        ctx.stroke();
+        // 穂：先がたれて、粒が並ぶ
+        var dir = bend >= 0 ? 1 : -1, droop = 0.55 + Math.abs(wind) * 0.25;
+        ctx.fillStyle = 'rgba(226,203,140,' + Math.min(1, a + 0.12) + ')';
+        var px = tx, py = ty;
+        for (var g = 0; g < s.grains; g++) {
+          var q = g / s.grains;
+          var gx = tx + dir * s.ear * (q * 0.9) + bend * 0.04 * q;
+          var gy = ty + s.ear * droop * q * q * 1.5 - s.ear * 0.08 * q;
+          var ang = Math.atan2(gy - py, gx - px) + (g % 2 ? 0.6 : -0.6);
+          var off = (g % 2 ? 1 : -1) * (1.6 + s.z * 1.6);
+          ctx.save();
+          ctx.translate(gx - Math.sin(ang) * off * 0.4, gy + Math.cos(ang) * off * 0.6);
+          ctx.rotate(ang);
+          ctx.beginPath(); ctx.ellipse(0, 0, 2.6 + s.z * 2.4, 1 + s.z * 1.1, 0, 0, 6.2832); ctx.fill();
+          ctx.restore();
+          px = gx; py = gy;
+        }
+      }
+    };
+    this.setVisible = function (v) { visible = v; };
+    this.isVisible = function () { return visible; };
+    window.addEventListener('pointermove', function (e) {
+      var r = canvas.getBoundingClientRect();
+      var x = e.clientX - r.left;
+      if (pointer.x > -9000) pointer.v = Math.max(-40, Math.min(40, pointer.v + (x - pointer.x) * 0.25));
+      pointer.x = x;
+    }, { passive: true });
+  }
+
+  var field = null, fieldCanvas = $('#field');
+  if (fieldCanvas && fieldCanvas.getContext) {
+    field = window.__field = new Field(fieldCanvas);
+    field.resize();
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (en) { field.setVisible(en[0].isIntersecting); }).observe(fieldCanvas);
+  }
+  var resizeTimer = null, lastW = window.innerWidth;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      measureMarquee();
+      // スマホのアドレスバーの出入り（高さだけの変化）では作り直さない
+      if (field && window.innerWidth !== lastW) { lastW = window.innerWidth; field.resize(); }
+      onScroll();
+    }, 150);
+  });
+
+  /* ---------- 毎フレームの処理（帯と稲穂）。動きを減らす設定のときは止める ---------- */
+  var lastT = 0;
+  function frame(t) {
+    var dt = Math.min(64, t - (lastT || t)); lastT = t;
+    if (marquee.unit > 0) {
+      marquee.x -= dt * 0.045 + marquee.boost * 0.35;
+      marquee.boost *= 0.86;
+      if (marquee.x <= -marquee.unit) marquee.x += marquee.unit;
+      if (marquee.x > 0) marquee.x -= marquee.unit;
+      marquee.track.style.transform = 'translate3d(' + marquee.x.toFixed(2) + 'px,0,0)';
+    }
+    if (field && field.isVisible() && !document.hidden) field.draw(t);
+    requestAnimationFrame(frame);
+  }
+  if (!reduceMotion) requestAnimationFrame(frame);
+
+  /* ---------- オープニング（最初の1回だけ） ---------- */
+  (function () {
+    var intro = $('#intro');
+    if (!root.classList.contains('is-intro')) return;
+    var done = false;
+    function finish() {
+      if (done) return; done = true;
+      try { sessionStorage.setItem('intro', '1'); } catch (e) {}
+      intro.classList.add('is-out');
+      root.classList.remove('is-intro'); root.classList.add('is-ready');
+      setTimeout(function () { intro.classList.remove('is-out'); }, 1000);
+    }
+    var fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    var minWait = new Promise(function (r) { setTimeout(r, 1500); });
+    Promise.all([fontsReady, minWait]).then(finish);
+    setTimeout(finish, 3200); // フォントが遅くても、ここで必ず開ける
+  })();
 
   loadContent().then(render).catch(function (err) {
     console.error(err);
