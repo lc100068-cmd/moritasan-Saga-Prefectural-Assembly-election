@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" role="img" aria-label="写真（準備中）">
+  <rect width="400" height="500" fill="#dbe4ee"/>
+  <circle cx="200" cy="190" r="78" fill="#b6c5d6"/>
+  <path d="M60 500c0-92 63-160 140-160s140 68 140 160z" fill="#b6c5d6"/>
+  <text x="200" y="470" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#5b7088">写真を準備中</text>
+</svg>

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>管理画面</title>
+<base target="_top">
+<style>
+  :root {
+    --navy: #17365d; --navy-2: #24507f; --accent: #d9822b;
+    --bg: #f3f5f8; --card: #fff; --line: #dde3ea; --text: #1f2933; --muted: #66788a;
+    --ok: #1d7a4f; --ok-bg: #e5f4ec; --warn: #9a5a00; --warn-bg: #fff4e0; --ng: #a32020; --ng-bg: #fdeaea;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  a { color: var(--navy-2); }
+
+  .top { background: var(--navy); color: #fff; padding: 12px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .top h1 { font-size: 17px; margin: 0; font-weight: 700; }
+  .top .who { margin-left: auto; font-size: 13px; opacity: .8; }
+  .phase { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.16); }
+  .phase.campaign { background: var(--accent); }
+  .phase.election_day { background: #c0392b; }
+
+  nav.tabs { background: #fff; border-bottom: 1px solid var(--line); display: flex; gap: 4px; padding: 0 12px; overflow-x: auto; }
+  nav.tabs button { border: none; background: none; padding: 14px 14px 12px; cursor: pointer; border-bottom: 3px solid transparent; color: var(--muted); white-space: nowrap; font-weight: 600; }
+  nav.tabs button.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+  section.tab { display: none; }
+  section.tab.active { display: block; }
+  h2 { font-size: 18px; margin: 0 0 12px; color: var(--navy); }
+  h3 { font-size: 15px; margin: 0 0 10px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
+  .muted { color: var(--muted); font-size: 13px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .stat .n { font-size: 28px; font-weight: 700; color: var(--navy); line-height: 1.2; }
+  .stat .l { font-size: 12px; color: var(--muted); }
+
+  .notice { border-radius: 8px; padding: 12px 14px; font-size: 14px; margin-bottom: 16px; }
+  .notice.info { background: #e8f0fa; color: #1c3d63; }
+  .notice.warn { background: var(--warn-bg); color: var(--warn); }
+  .notice.ng { background: var(--ng-bg); color: var(--ng); }
+  .notice ul { margin: 6px 0 0; padding-left: 20px; }
+
+  .btn { text-decoration: none; color: inherit; display: inline-block; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; font-size: 14px; }
+  .btn:hover { border-color: var(--navy-2); }
+  .btn.primary { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .btn.accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.danger { color: var(--ng); }
+  .btn.small { padding: 4px 10px; font-size: 13px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+  label.f { display: block; margin-bottom: 12px; }
+  label.f > span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  input[type=text], input[type=email], input[type=url], input[type=date], input[type=search], select, textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; background: #fff;
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  textarea.body { min-height: 260px; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid #9cb8dc; border-color: var(--navy-2); }
+
+  .posts-layout { display: grid; grid-template-columns: 300px 1fr; gap: 16px; align-items: start; }
+  .post-list { padding: 0; overflow: hidden; }
+  .post-list .head { padding: 12px; border-bottom: 1px solid var(--line); }
+  .post-list ul { list-style: none; margin: 0; padding: 0; max-height: 70vh; overflow-y: auto; }
+  .post-list li { padding: 10px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .post-list li:hover { background: #f7f9fc; }
+  .post-list li.sel { background: #eaf1fa; }
+  .post-list .t { font-weight: 600; font-size: 14px; }
+  .badge { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 999px; margin-right: 4px; background: #eef1f5; color: var(--muted); }
+  .badge.pub { background: var(--ok-bg); color: var(--ok); }
+  .badge.sent { background: #e8f0fa; color: var(--navy-2); }
+  .badge.pending { background: var(--warn-bg); color: var(--warn); }
+  .badge.unsubscribed { background: #eef1f5; color: var(--muted); }
+  .badge.active { background: var(--ok-bg); color: var(--ok); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .img-preview { max-width: 220px; max-height: 160px; border-radius: 6px; display: block; margin-top: 6px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .table-wrap { overflow-x: auto; }
+
+  .list-editor table td { padding: 4px; }
+  .list-editor input, .list-editor textarea, .list-editor select { padding: 6px 8px; }
+  .list-editor textarea { min-height: 60px; }
+  .list-editor .ops { white-space: nowrap; width: 1%; }
+
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #1f2933; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 10; max-width: 90vw; }
+  #toast.show { opacity: 1; }
+  #toast.err { background: var(--ng); }
+  #loading { position: fixed; inset: 0; background: rgba(243,245,248,.7); display: none; align-items: center; justify-content: center; z-index: 9; font-weight: 600; color: var(--navy); }
+  #loading.show { display: flex; }
+
+  @media (max-width: 760px) {
+    .posts-layout, .grid2 { grid-template-columns: 1fr; }
+    .post-list ul { max-height: 240px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1 id="title">管理画面</h1>
+  <span id="phase" class="phase"></span>
+  <span class="who" id="who"></span>
+</header>
+<nav class="tabs" id="tabs">
+  <button data-tab="home" class="active">ホーム</button>
+  <button data-tab="posts">活動報告・メルマガ</button>
+  <button data-tab="subs">読者</button>
+  <button data-tab="site">サイト情報</button>
+</nav>
+
+<main>
+  <!-- ホーム -->
+  <section class="tab active" id="tab-home">
+    <div id="phase-notice"></div>
+    <div class="stats" id="stats"></div>
+    <div class="card">
+      <h3>リンク</h3>
+      <div class="row">
+        <a class="btn" id="link-site" href="#" target="_blank" rel="noopener">公開サイトを開く</a>
+        <a class="btn" id="link-sheet" href="#" target="_blank" rel="noopener">スプレッドシートを開く</a>
+        <button class="btn" id="btn-new-post2">＋ 活動報告を書く</button>
+      </div>
+      <p class="muted" id="api-url"></p>
+    </div>
+    <div class="card" id="queue-card" hidden>
+      <h3>送信待ちのメール</h3>
+      <p id="queue-text"></p>
+      <div class="row">
+        <button class="btn" id="btn-process">今すぐ続きを送る</button>
+        <button class="btn danger" id="btn-clear-queue">送信待ちを取り消す</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 活動報告 -->
+  <section class="tab" id="tab-posts">
+    <div class="posts-layout">
+      <div class="card post-list">
+        <div class="head"><button class="btn primary" id="btn-new-post" style="width:100%">＋ 新しい活動報告</button></div>
+        <ul id="post-list"></ul>
+      </div>
+      <div class="card">
+        <h2 id="editor-title">新しい活動報告</h2>
+        <form id="post-form" autocomplete="off">
+          <input type="hidden" name="id">
+          <div class="grid2">
+            <label class="f"><span>日付</span><input type="date" name="date" required></label>
+            <label class="f"><span>状態</span>
+              <select name="status">
+                <option value="draft">下書き（サイトに出さない）</option>
+                <option value="published">公開（サイトに掲載）</option>
+              </select>
+            </label>
+          </div>
+          <label class="f"><span>タイトル</span><input type="text" name="title" maxlength="80" required placeholder="例）〇〇地区の皆さんと意見交換しました"></label>
+          <label class="f"><span>本文</span><textarea class="body" name="body" placeholder="改行はそのまま反映されます。URLは自動でリンクになります。"></textarea></label>
+          <div class="grid2">
+            <label class="f"><span>画像（任意）</span>
+              <input type="file" accept="image/*" id="img-file">
+              <input type="url" name="image_url" placeholder="または画像のURL" style="margin-top:6px">
+              <img id="img-preview" class="img-preview" alt="" hidden>
+            </label>
+            <label class="f"><span>関連リンク（任意）</span><input type="url" name="link_url" placeholder="Instagramの投稿URLなど"></label>
+          </div>
+          <div id="post-warn"></div>
+          <div class="row">
+            <button class="btn primary" type="submit">保存</button>
+            <button class="btn" type="button" id="btn-test">自分にテスト送信</button>
+            <button class="btn accent" type="button" id="btn-send">読者に配信する</button>
+            <button class="btn danger" type="button" id="btn-delete" style="margin-left:auto">削除</button>
+          </div>
+          <p class="muted" id="post-meta"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- 読者 -->
+  <section class="tab" id="tab-subs">
+    <div class="card">
+      <div class="row" style="margin-bottom:12px">
+        <select id="sub-filter" style="width:auto">
+          <option value="active">配信中</option>
+          <option value="pending">確認待ち</option>
+          <option value="unsubscribed">停止</option>
+          <option value="">すべて</option>
+        </select>
+        <input type="search" id="sub-search" placeholder="メール・名前で検索" style="max-width:260px">
+        <button class="btn" id="btn-csv" style="margin-left:auto">CSVダウンロード</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>メールアドレス</th><th>お名前</th><th>状態</th><th>登録日時</th><th>経路</th><th></th></tr></thead>
+          <tbody id="sub-body"></tbody>
+        </table>
+      </div>
+      <p class="muted" id="sub-count"></p>
+    </div>
+    <div class="card">
+      <h3>手入力で追加（紙の申込書などで同意をいただいた方）</h3>
+      <form id="add-sub" class="grid2">
+        <label class="f"><span>メールアドレス</span><input type="email" name="email" required></label>
+        <label class="f"><span>お名前（任意）</span><input type="text" name="name"></label>
+        <label class="f" style="grid-column:1/-1"><span>同意を得た方法（必須・記録されます）</span><input type="text" name="note" required placeholder="例）2026年12月1日 〇〇地区報告会で申込書に記入"></label>
+        <div><button class="btn primary" type="submit">追加</button></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- サイト情報 -->
+  <section class="tab" id="tab-site">
+    <div class="card">
+      <h2>基本情報</h2>
+      <form id="settings-form"></form>
+    </div>
+    <div id="list-editors"></div>
+  </section>
+</main>
+
+<div id="loading">処理中…</div>
+<div id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- サーバー呼び出し ---------- */
+  var isGas = typeof google !== 'undefined' && google.script && google.script.run;
+  function call(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    if (!isGas) return Mock.call(fn, args);
+    return new Promise(function (resolve, reject) {
+      var r = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
+      r[fn].apply(r, args);
+    });
+  }
+
+  /* ---------- 共通 ---------- */
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === 'text') e.textContent = attrs[k];
+      else if (k === 'class') e.className = attrs[k];
+      else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2), attrs[k]);
+      else if (attrs[k] !== false && attrs[k] != null) e.setAttribute(k, attrs[k]);
+    });
+    (children || []).forEach(function (c) { if (c != null) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+    return e;
+  }
+  var toastTimer;
+  function toast(msg, isErr) {
+    var t = $('#toast');
+    t.textContent = msg; t.className = 'show' + (isErr ? ' err' : '');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.className = ''; }, isErr ? 6000 : 3000);
+  }
+  function busy(on) { $('#loading').classList.toggle('show', !!on); }
+  function run(promise, okMsg) {
+    busy(true);
+    return promise.then(function (r) { busy(false); if (okMsg) toast(typeof okMsg === 'function' ? okMsg(r) : okMsg); return r; })
+      .catch(function (err) { busy(false); toast((err && err.message) || String(err), true); throw err; });
+  }
+
+  var state = { data: null, currentPost: null, subs: [] };
+
+  /* ---------- タブ ---------- */
+  function showTab(name) {
+    $$('#tabs button').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === name); });
+    $$('section.tab').forEach(function (s) { s.classList.toggle('active', s.id === 'tab-' + name); });
+    if (name === 'subs' && !state.subs.length) loadSubs();
+  }
+  $('#tabs').addEventListener('click', function (e) { if (e.target.dataset.tab) showTab(e.target.dataset.tab); });
+
+  /* ---------- 選挙日程による注意 ---------- */
+  var PHASE = {
+    pre: { label: '告示前（政治活動期間）', cls: 'info', html:
+      '<b>現在は告示前です。</b>活動報告・政策の発信はできますが、<b>「投票してください」など投票を依頼する表現は事前運動にあたるおそれがあります。</b>' },
+    campaign: { label: '選挙期間中', cls: 'warn', html:
+      '<b>選挙期間中です。</b>メールは事前に登録（同意）した方にのみ、候補者本人の名義で送ります。件名・本文に「選挙運動用電子メール」である旨、送信者情報、配信停止方法が自動で入ります。' +
+      '<ul><li>メールの転送依頼（「拡散してください」など）は控えてください。</li><li>投票日当日（{E}）はサイト更新・配信が自動で止まります。</li></ul>' },
+    election_day: { label: '投票日', cls: 'ng', html:
+      '<b>本日は投票日です。</b>公職選挙法により、サイトの更新・メール配信はできません。この画面からの保存・配信は止めています。' },
+    post: { label: '選挙後', cls: 'info', html:
+      '選挙後です。当選・落選のお礼のあいさつ（「ご投票ありがとうございました」など）は、文書の頒布に制限があります。メールでのお礼の可否は選挙管理委員会に確認のうえ配信してください。' },
+  };
+  var NG_WORDS = ['投票', '一票', '清き', '当選させ', '票を', 'ご支持を', '必勝'];
+
+  function checkText(text) {
+    if (!state.data || state.data.phase !== 'pre') return [];
+    return NG_WORDS.filter(function (w) { return text.indexOf(w) >= 0; });
+  }
+
+  /* ---------- 初期化 ---------- */
+  function load() {
+    return run(call('apiBootstrap')).then(function (d) {
+      state.data = d;
+      var name = (d.settingsRows.filter(function (r) { return r.key === 'candidate_name'; })[0] || {}).value || '';
+      $('#title').textContent = name + ' 管理画面';
+      document.title = '管理画面 | ' + name;
+      $('#who').textContent = d.user;
+      var ph = PHASE[d.phase];
+      $('#phase').textContent = ph.label;
+      $('#phase').className = 'phase ' + d.phase;
+      $('#phase-notice').innerHTML = '<div class="notice ' + ph.cls + '">' + ph.html.replace('{E}', d.electionDate) +
+        '<div class="muted" style="margin-top:6px">告示日 ' + d.noticeDate + ' ／ 投票日 ' + d.electionDate + '（設定は「サイト情報」で変更できます）</div></div>';
+      renderStats(d);
+      $('#link-site').href = d.siteUrl || '#';
+      $('#link-site').toggleAttribute('hidden', !d.siteUrl);
+      $('#link-sheet').href = d.sheetUrl;
+      $('#api-url').textContent = 'サイト連携用URL（config.js の API_URL に設定）: ' + d.apiUrl;
+      renderPostList();
+      renderSettings();
+      renderListEditors();
+      var locked = d.phase === 'election_day';
+      $$('#post-form button, #settings-form button, #list-editors button').forEach(function (b) { if (b.id !== 'btn-test') b.disabled = locked; });
+    });
+  }
+
+  function renderStats(d) {
+    var s = d.stats;
+    var items = [
+      [s.active, '配信中の読者'], ['+' + s.newThisWeek, '今週の新規登録'], [s.pending, '確認待ち'],
+      [s.unsubscribed, '配信停止'], [s.published, '公開中の活動報告'], [s.quota, '本日あと送信できる通数'],
+    ];
+    $('#stats').innerHTML = '';
+    items.forEach(function (it) {
+      $('#stats').appendChild(el('div', { class: 'stat' }, [el('div', { class: 'n', text: String(it[0]) }), el('div', { class: 'l', text: it[1] })]));
+    });
+    $('#queue-card').hidden = !s.queue;
+    $('#queue-text').textContent = '送信待ちが ' + s.queue + ' 通あります。1日の送信上限に達したため、1時間ごとに自動で続きを送信しています。';
+  }
+
+  /* ---------- 活動報告 ---------- */
+  function renderPostList() {
+    var ul = $('#post-list');
+    ul.innerHTML = '';
+    if (!state.data.posts.length) { ul.appendChild(el('li', { class: 'muted', text: 'まだ活動報告はありません。' })); return; }
+    state.data.posts.forEach(function (p) {
+      var li = el('li', { class: state.currentPost && state.currentPost.id === p.id ? 'sel' : '', onclick: function () { openPost(p); } }, [
+        el('div', { class: 't', text: p.title }),
+        el('div', {}, [
+          el('span', { class: 'badge' + (p.status === 'published' ? ' pub' : ''), text: p.status === 'published' ? '公開' : '下書き' }),
+          p.sent_at ? el('span', { class: 'badge sent', text: '配信 ' + (p.sent_count || 0) + '通' }) : null,
+          el('span', { class: 'muted', text: p.date }),
+        ]),
+      ]);
+      ul.appendChild(li);
+    });
+  }
+
+  function today() {
+    var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10);
+  }
+
+  function openPost(p) {
+    state.currentPost = p || null;
+    var f = $('#post-form');
+    f.reset();
+    f.id.value = p ? p.id : '';
+    f.date.value = p ? p.date : today();
+    f.status.value = p ? p.status : 'draft';
+    f.title.value = p ? p.title : '';
+    f.body.value = p ? p.body : '';
+    f.image_url.value = p ? p.image_url : '';
+    f.link_url.value = p ? p.link_url : '';
+    $('#editor-title').textContent = p ? '活動報告を編集' : '新しい活動報告';
+    $('#btn-delete').hidden = !p;
+    $('#post-meta').textContent = p ? ('作成 ' + (p.created_at || '-') + ' ／ 更新 ' + (p.updated_at || '-') + (p.sent_at ? ' ／ 配信 ' + p.sent_at + '（' + (p.sent_count || 0) + '通）' : '')) : '';
+    updateImgPreview(); updateWarn(); renderPostList();
+    showTab('posts');
+  }
+
+  function updateImgPreview() {
+    var url = $('#post-form').image_url.value;
+    var img = $('#img-preview');
+    img.hidden = !url; if (url) img.src = url;
+  }
+  function updateWarn() {
+    var f = $('#post-form');
+    var hits = checkText(f.title.value + '\n' + f.body.value);
+    $('#post-warn').innerHTML = hits.length
+      ? '<div class="notice warn">告示前は、投票の依頼と受け取られる表現に注意してください。確認が必要な語句：<b>' + hits.join('、') + '</b></div>' : '';
+  }
+  $('#post-form').image_url.addEventListener('input', updateImgPreview);
+  $('#post-form').addEventListener('input', updateWarn);
+
+  function formPost() {
+    var f = $('#post-form');
+    return { id: f.id.value, date: f.date.value, status: f.status.value, title: f.title.value, body: f.body.value, image_url: f.image_url.value, link_url: f.link_url.value };
+  }
+
+  function savePost() {
+    var p = formPost();
+    var hits = checkText(p.title + '\n' + p.body);
+    if (hits.length && p.status === 'published' &&
+        !confirm('告示前に注意が必要な語句（' + hits.join('、') + '）が含まれています。\n投票の依頼にあたらない内容か確認しましたか？')) {
+      return Promise.reject(new Error('保存を中止しました。'));
+    }
+    return run(call('apiSavePost', p), '保存しました').then(function (saved) {
+      var list = state.data.posts.filter(function (x) { return x.id !== saved.id; });
+      list.unshift(saved);
+      list.sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+      state.data.posts = list;
+      openPost(saved);
+      return saved;
+    });
+  }
+
+  $('#post-form').addEventListener('submit', function (e) { e.preventDefault(); savePost().catch(function () {}); });
+  $('#btn-new-post').addEventListener('click', function () { openPost(null); });
+  $('#btn-new-post2').addEventListener('click', function () { openPost(null); });
+
+  $('#btn-delete').addEventListener('click', function () {
+    var p = state.currentPost; if (!p) return;
+    if (!confirm('「' + p.title + '」を削除します。よろしいですか？')) return;
+    run(call('apiDeletePost', p.id), '削除しました').then(function () {
+      state.data.posts = state.data.posts.filter(function (x) { return x.id !== p.id; });
+      openPost(null);
+    }).catch(function () {});
+  });
+
+  $('#btn-test').addEventListener('click', function () {
+    savePost().then(function (p) {
+      return run(call('apiTestSend', p.id), function (to) { return to + ' にテスト送信しました'; });
+    }).catch(function () {});
+  });
+
+  $('#btn-send').addEventListener('click', function () {
+    var f = $('#post-form');
+    if (f.status.value !== 'published') { toast('配信するには「公開」にしてください。', true); return; }
+    var p0 = state.currentPost;
+    var n = state.data.stats.active;
+    var resend = !!(p0 && p0.sent_at);
+    var msg = (resend ? 'この記事は配信済みです。もう一度、' : '') + '配信中の読者 ' + n + ' 人にメールを送ります。\n送信後は取り消せません。よろしいですか？';
+    if (!confirm(msg)) return;
+    savePost().then(function (p) {
+      return run(call('apiSendPost', p.id, resend), function (r) {
+        return r.queued + '人に配信を開始しました（送信 ' + r.sent + ' 通' + (r.remaining ? '、残り ' + r.remaining + ' 通は自動で順次送信' : '') + '）';
+      });
+    }).then(load).catch(function () {});
+  });
+
+  /* 画像アップロード：縮小してから Google ドライブへ */
+  $('#img-file').addEventListener('change', function (e) {
+    var file = e.target.files[0]; if (!file) return;
+    resizeImage(file, 1600).then(function (dataUrl) {
+      return run(call('apiUploadImage', dataUrl, file.name), '画像をアップロードしました');
+    }).then(function (url) {
+      $('#post-form').image_url.value = url; updateImgPreview();
+    }).catch(function () {});
+  });
+  function resizeImage(file, max) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () {
+        var s = Math.min(1, max / Math.max(img.width, img.height));
+        var c = document.createElement('canvas');
+        c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = function () { reject(new Error('画像を読み込めませんでした。')); };
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  /* ---------- 送信キュー ---------- */
+  $('#btn-process').addEventListener('click', function () {
+    run(call('apiProcessQueue'), function (r) { return r.note || ('送信 ' + r.sent + ' 通、残り ' + r.remaining + ' 通'); }).then(load).catch(function () {});
+  });
+  $('#btn-clear-queue').addEventListener('click', function () {
+    if (!confirm('送信待ちのメールをすべて取り消します。よろしいですか？')) return;
+    run(call('apiClearQueue'), function (n) { return n + ' 通を取り消しました'; }).then(load).catch(function () {});
+  });
+
+  /* ---------- 読者 ---------- */
+  var STATUS_LABEL = { active: '配信中', pending: '確認待ち', unsubscribed: '停止' };
+  function loadSubs() {
+    return run(call('apiGetSubscribers')).then(function (list) { state.subs = list; renderSubs(); });
+  }
+  function filteredSubs() {
+    var st = $('#sub-filter').value, q = $('#sub-search').value.trim().toLowerCase();
+    return state.subs.filter(function (s) {
+      return (!st || s.status === st) && (!q || (s.email + ' ' + s.name).toLowerCase().indexOf(q) >= 0);
+    });
+  }
+  function renderSubs() {
+    var body = $('#sub-body'); body.innerHTML = '';
+    var list = filteredSubs();
+    list.forEach(function (s) {
+      body.appendChild(el('tr', {}, [
+        el('td', { text: s.email }), el('td', { text: s.name || '' }),
+        el('td', {}, [el('span', { class: 'badge ' + s.status, text: STATUS_LABEL[s.status] || s.status })]),
+        el('td', { text: s.confirmed_at || s.requested_at || '' }), el('td', { text: s.source || '' }),
+        el('td', {}, [s.status !== 'unsubscribed' ? el('button', { class: 'btn small danger', text: '停止', onclick: function () {
+          if (!confirm(s.email + ' への配信を停止します。')) return;
+          run(call('apiUnsubscribe', s.email), '停止しました').then(loadSubs).catch(function () {});
+        } }) : null]),
+      ]));
+    });
+    $('#sub-count').textContent = list.length + ' 件表示 ／ 全 ' + state.subs.length + ' 件';
+  }
+  $('#sub-filter').addEventListener('change', renderSubs);
+  $('#sub-search').addEventListener('input', renderSubs);
+  $('#btn-csv').addEventListener('click', function () {
+    var cols = ['email', 'name', 'status', 'requested_at', 'confirmed_at', 'unsubscribed_at', 'source'];
+    var lines = [cols.join(',')].concat(filteredSubs().map(function (s) {
+      return cols.map(function (c) { return '"' + String(s[c] == null ? '' : s[c]).replace(/"/g, '""') + '"'; }).join(',');
+    }));
+    var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv' });
+    var a = el('a', { href: URL.createObjectURL(blob), download: 'subscribers_' + today() + '.csv' });
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+  $('#add-sub').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target;
+    run(call('apiAddSubscriber', f.email.value, f.name.value, f.note.value), '追加しました').then(function () { f.reset(); return loadSubs(); }).catch(function () {});
+  });
+
+  /* ---------- サイト情報 ---------- */
+  var SETTING_GROUPS = [
+    ['プロフィール表示', ['candidate_name', 'candidate_kana', 'election_label', 'district', 'catchphrase', 'lead', 'photo_url', 'bio']],
+    ['メルマガ', ['newsletter_lead', 'consent_text', 'mail_sender_name', 'mail_footer', 'double_opt_in']],
+    ['事務所・運営者（サイト下部に表示）', ['office_name', 'office_address', 'office_tel', 'office_email', 'site_operator', 'site_url']],
+    ['選挙日程', ['notice_date', 'election_date']],
+  ];
+  var LONG_KEYS = ['lead', 'bio', 'consent_text', 'mail_footer', 'newsletter_lead'];
+
+  function renderSettings() {
+    var form = $('#settings-form'); form.innerHTML = '';
+    var rows = {}; state.data.settingsRows.forEach(function (r) { rows[r.key] = r; });
+    var used = {};
+    SETTING_GROUPS.forEach(function (g) {
+      form.appendChild(el('h3', { text: g[0], style: 'margin-top:8px' }));
+      g[1].forEach(function (k) { used[k] = 1; form.appendChild(settingField(k, rows[k] || { key: k, value: '', note: k })); });
+    });
+    Object.keys(rows).forEach(function (k) { if (!used[k]) form.appendChild(settingField(k, rows[k])); });
+    form.appendChild(el('div', { class: 'row' }, [el('button', { class: 'btn primary', type: 'submit', text: '基本情報を保存' })]));
+  }
+  function settingField(k, r) {
+    var input;
+    if (k === 'double_opt_in') {
+      input = el('select', { name: k }, [el('option', { value: 'TRUE', text: '送る（おすすめ）' }), el('option', { value: 'FALSE', text: '送らない' })]);
+      input.value = String(r.value).toUpperCase() === 'FALSE' ? 'FALSE' : 'TRUE';
+    } else if (k === 'notice_date' || k === 'election_date') {
+      input = el('input', { type: 'date', name: k, value: r.value });
+    } else if (LONG_KEYS.indexOf(k) >= 0) {
+      input = el('textarea', { name: k }); input.value = r.value;
+    } else {
+      input = el('input', { type: 'text', name: k, value: r.value });
+    }
+    return el('label', { class: 'f' }, [el('span', { text: r.note || k }), input]);
+  }
+  $('#settings-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var obj = {};
+    $$('[name]', e.target).forEach(function (i) { obj[i.name] = i.value; });
+    run(call('apiSaveSettings', obj), '基本情報を保存しました（サイト反映まで最大5分）').then(load).catch(function () {});
+  });
+
+  var LISTS = {
+    profile: { title: 'プロフィール項目', cols: [['label', '項目'], ['value', '内容']] },
+    policies: { title: '目指すこと（政策）', cols: [['title', 'タイトル'], ['summary', 'ひとこと'], ['detail', '詳しい説明', 'long']] },
+    history: { title: 'これまでの活動（年表）', cols: [['date', '時期'], ['title', '出来事'], ['detail', '詳細', 'long']] },
+    sns: { title: 'SNSリンク', cols: [['platform', '種類', 'platform'], ['label', '表示名'], ['url', 'URL']] },
+    instagram: { title: 'サイトに埋め込むInstagram投稿', note: '投稿ページのURL（https://www.instagram.com/p/…/）を貼り付けてください。上から順に表示されます。', cols: [['url', '投稿URL']] },
+  };
+  var PLATFORMS = [['instagram', 'Instagram'], ['x', 'X'], ['facebook', 'Facebook'], ['youtube', 'YouTube'], ['line', 'LINE'], ['tiktok', 'TikTok'], ['note', 'note'], ['web', 'その他']];
+
+  function renderListEditors() {
+    var wrap = $('#list-editors'); wrap.innerHTML = '';
+    Object.keys(LISTS).forEach(function (name) { wrap.appendChild(listEditor(name, LISTS[name], state.data.lists[name] || [])); });
+  }
+  function listEditor(name, def, rows) {
+    var tbody = el('tbody');
+    function addRow(r) {
+      r = r || {};
+      var tr = el('tr');
+      def.cols.forEach(function (c) {
+        var input;
+        if (c[2] === 'long') { input = el('textarea', { 'data-k': c[0] }); input.value = r[c[0]] || ''; }
+        else if (c[2] === 'platform') {
+          input = el('select', { 'data-k': c[0] }, PLATFORMS.map(function (p) { return el('option', { value: p[0], text: p[1] }); }));
+          input.value = r[c[0]] || 'web';
+        } else input = el('input', { type: 'text', 'data-k': c[0], value: r[c[0]] || '' });
+        tr.appendChild(el('td', {}, [input]));
+      });
+      tr.appendChild(el('td', { class: 'ops' }, [
+        el('button', { type: 'button', class: 'btn small', text: '↑', title: '上へ', onclick: function () { if (tr.previousSibling) tbody.insertBefore(tr, tr.previousSibling); } }),
+        el('button', { type: 'button', class: 'btn small', text: '↓', title: '下へ', onclick: function () { if (tr.nextSibling) tbody.insertBefore(tr.nextSibling, tr); } }),
+        el('button', { type: 'button', class: 'btn small danger', text: '×', title: '削除', onclick: function () { tr.remove(); } }),
+      ]));
+      tbody.appendChild(tr);
+    }
+    rows.forEach(addRow);
+    var card = el('div', { class: 'card list-editor' }, [
+      el('h2', { text: def.title }),
+      def.note ? el('p', { class: 'muted', text: def.note }) : null,
+      el('div', { class: 'table-wrap' }, [el('table', {}, [
+        el('thead', {}, [el('tr', {}, def.cols.map(function (c) { return el('th', { text: c[1] }); }).concat([el('th')]))]),
+        tbody,
+      ])]),
+      el('div', { class: 'row', style: 'margin-top:10px' }, [
+        el('button', { type: 'button', class: 'btn', text: '＋ 行を追加', onclick: function () { addRow(); } }),
+        el('button', { type: 'button', class: 'btn primary', text: '保存', onclick: function () {
+          var data = $$('tr', tbody).map(function (tr) {
+            var o = {}; $$('[data-k]', tr).forEach(function (i) { o[i.dataset.k] = i.value; }); return o;
+          });
+          run(call('apiSaveList', name, data), def.title + 'を保存しました（サイト反映まで最大5分）').then(function (saved) { state.data.lists[name] = saved; }).catch(function () {});
+        } }),
+      ]),
+    ]);
+    return card;
+  }
+
+  /* ---------- ローカル確認用のデモ（GAS外で開いたときだけ動く） ---------- */
+  var Mock = {
+    db: {
+      user: 'demo@example.com', phase: 'pre', today: '2026-11-13', noticeDate: '2027-04-02', electionDate: '2027-04-11',
+      siteUrl: '../index.html', apiUrl: 'https://script.google.com/macros/s/XXXXXXXX/exec', sheetUrl: '#',
+      stats: { active: 128, pending: 4, unsubscribed: 3, newThisWeek: 12, published: 6, queue: 0, quota: 95 },
+      settingsRows: [
+        { key: 'candidate_name', value: '森田 浩文', note: '表示名' }, { key: 'candidate_kana', value: 'もりた ひろふみ', note: 'ふりがな（要確認）' },
+        { key: 'election_label', value: '佐賀県議会議員選挙 2027', note: 'トップに出る小見出し' }, { key: 'district', value: '選挙区：〇〇〇〇', note: '選挙区名' },
+        { key: 'catchphrase', value: '【サンプル】ふるさと佐賀の声を、まっすぐ県政へ。', note: 'キャッチコピー' },
+        { key: 'lead', value: '【サンプル】リード文', note: 'リード文' }, { key: 'photo_url', value: '', note: '顔写真のURL（空なら仮画像）' },
+        { key: 'bio', value: '【サンプル】自己紹介', note: 'プロフィール本文' },
+        { key: 'newsletter_lead', value: '日々の活動報告をメールでお届けします。', note: 'メルマガ欄の説明' },
+        { key: 'consent_text', value: '森田浩文（事務所）から…同意します。', note: '登録時の同意文（記録されます）' },
+        { key: 'mail_sender_name', value: '森田浩文', note: 'メール差出人名' }, { key: 'mail_footer', value: '森田浩文 事務所', note: 'メール末尾の署名' },
+        { key: 'double_opt_in', value: 'TRUE', note: '登録時に確認メールを送るか' },
+        { key: 'office_name', value: '森田浩文 事務所', note: '事務所名' }, { key: 'office_address', value: '佐賀県〇〇市', note: '住所' },
+        { key: 'office_tel', value: '0952-00-0000', note: '電話番号' }, { key: 'office_email', value: '', note: '問い合わせ用メールアドレス' },
+        { key: 'site_operator', value: '森田浩文 事務所', note: 'サイト運営者の表示' }, { key: 'site_url', value: '', note: '公開サイトのURL' },
+        { key: 'notice_date', value: '2027-04-02', note: '告示日（YYYY-MM-DD）' }, { key: 'election_date', value: '2027-04-11', note: '投票日（YYYY-MM-DD）' },
+      ],
+      lists: {
+        profile: [{ label: '出身', value: '【要入力】' }, { label: '経歴', value: '【要入力】' }],
+        policies: [{ title: '【サンプル】子育て・教育', summary: '安心して子どもを産み育てられる佐賀へ。', detail: '具体的な取り組み' }],
+        history: [{ date: '20XX年', title: '【サンプル】〇〇の活動を開始', detail: '' }],
+        sns: [{ platform: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/' }],
+        instagram: [],
+      },
+      posts: [
+        { id: 'a1', date: '2026-11-10', title: '【サンプル】〇〇地区で意見交換会を開きました', body: '本文のサンプルです。', status: 'published', image_url: '', link_url: '', created_at: '2026-11-10 20:00:00', updated_at: '2026-11-10 20:00:00', sent_at: '2026-11-10 20:05:00', sent_count: 120 },
+        { id: 'a2', date: '2026-11-03', title: '【サンプル】街頭での活動報告', body: '本文のサンプルです。', status: 'published', image_url: '', link_url: '', created_at: '', updated_at: '', sent_at: '', sent_count: 0 },
+        { id: 'a3', date: '2026-11-12', title: '【サンプル】下書きの記事', body: '', status: 'draft', image_url: '', link_url: '', created_at: '', updated_at: '', sent_at: '', sent_count: 0 },
+      ],
+      subs: [
+        { email: 'taro@example.com', name: '佐賀 太郎', status: 'active', requested_at: '2026-11-01 10:00:00', confirmed_at: '2026-11-01 10:02:00', source: 'site' },
+        { email: 'hanako@example.com', name: '', status: 'pending', requested_at: '2026-11-12 21:00:00', confirmed_at: '', source: 'site' },
+      ],
+    },
+    call: function (fn, args) {
+      var db = this.db;
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          switch (fn) {
+            case 'apiBootstrap': resolve(JSON.parse(JSON.stringify(db))); break;
+            case 'apiGetSubscribers': resolve(db.subs.slice()); break;
+            case 'apiSavePost':
+              var p = args[0]; if (!p.title) return reject(new Error('タイトルを入力してください。'));
+              p.id = p.id || Math.random().toString(16).slice(2, 10);
+              var old = db.posts.filter(function (x) { return x.id === p.id; })[0] || {};
+              p = Object.assign({}, old, p); db.posts = db.posts.filter(function (x) { return x.id !== p.id; }).concat([p]); resolve(p); break;
+            case 'apiTestSend': resolve(db.user); break;
+            case 'apiSendPost': resolve({ queued: db.stats.active, sent: db.stats.active, remaining: 0 }); break;
+            default: resolve(args[1] || true);
+          }
+        }, 150);
+      });
+    },
+  };
+  if (!isGas) document.title = '管理画面（デモ）';
+
+  load().then(function () { if (location.hash === '#posts') openPost(state.data.posts[0]); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>森田 浩文 | 活動報告・政策</title>
+<meta name="description" content="森田浩文のこれまでの活動と、目指すことをお伝えするサイトです。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="森田 浩文 | 活動報告・政策">
+<meta property="og:description" content="森田浩文のこれまでの活動と、目指すことをお伝えするサイトです。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">本文へ移動</a>
+
+<header class="site-header" id="top">
+  <div class="wrap header-inner">
+    <a class="brand" href="#top" data-bind="candidate_name">森田 浩文</a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="gnav" aria-label="メニュー">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="gnav" id="gnav">
+      <a href="#profile">プロフィール</a>
+      <a href="#vision">目指すこと</a>
+      <a href="#history">これまでの活動</a>
+      <a href="#reports">活動報告</a>
+      <a href="#sns">SNS</a>
+      <a href="#newsletter" class="nav-cta">メルマガ登録</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <!-- ヒーロー -->
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-text">
+        <p class="eyebrow"><span data-bind="election_label"></span><span class="sep">／</span><span data-bind="district"></span></p>
+        <p class="catch" data-bind="catchphrase"></p>
+        <h1 class="name">
+          <span data-bind="candidate_name">森田 浩文</span>
+          <small data-bind="candidate_kana"></small>
+        </h1>
+        <p class="lead" data-bind="lead"></p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#newsletter">活動報告をメールで受け取る</a>
+          <a class="btn btn-ghost" href="#vision">目指すことを見る</a>
+        </div>
+      </div>
+      <figure class="hero-photo">
+        <img id="photo" src="assets/img/photo-placeholder.svg" alt="" width="400" height="500">
+      </figure>
+    </div>
+  </section>
+
+  <!-- プロフィール -->
+  <section class="section" id="profile">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="en">PROFILE</p>
+        <h2>プロフィール</h2>
+      </header>
+      <div class="profile-grid">
+        <div class="bio prose" id="bio"></div>
+        <dl class="facts" id="facts"></dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- 目指すこと -->
+  <section class="section alt" id="vision">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="en">VISION</p>
+        <h2>目指すこと</h2>
+      </header>
+      <ol class="policies" id="policies"></ol>
+    </div>
+  </section>
+
+  <!-- これまでの活動 -->
+  <section class="section" id="history">
+    <div class="wrap narrow">
+      <header class="section-head">
+        <p class="en">HISTORY</p>
+        <h2>これまでの活動</h2>
+      </header>
+      <ol class="timeline" id="timeline"></ol>
+    </div>
+  </section>
+
+  <!-- 活動報告 -->
+  <section class="section alt" id="reports">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="en">REPORT</p>
+        <h2>活動報告</h2>
+      </header>
+      <div class="posts" id="posts"></div>
+      <div class="center"><button class="btn btn-ghost" id="more-posts" hidden>もっと見る</button></div>
+    </div>
+  </section>
+
+  <!-- SNS -->
+  <section class="section" id="sns">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="en">SNS</p>
+        <h2>SNSでも発信しています</h2>
+      </header>
+      <ul class="sns-links" id="sns-links"></ul>
+      <div class="ig-grid" id="ig-grid"></div>
+    </div>
+  </section>
+
+  <!-- メルマガ -->
+  <section class="section newsletter" id="newsletter">
+    <div class="wrap narrow">
+      <header class="section-head light">
+        <p class="en">NEWSLETTER</p>
+        <h2>活動報告をメールで受け取る</h2>
+      </header>
+      <p class="nl-lead" data-bind="newsletter_lead"></p>
+      <form class="nl-form" id="nl-form" novalidate>
+        <div class="field">
+          <label for="nl-email">メールアドレス <span class="req">必須</span></label>
+          <input id="nl-email" name="email" type="email" inputmode="email" autocomplete="email" required placeholder="example@mail.com">
+        </div>
+        <div class="field">
+          <label for="nl-name">お名前 <span class="opt">任意</span></label>
+          <input id="nl-name" name="name" type="text" autocomplete="name" maxlength="50" placeholder="佐賀 太郎">
+        </div>
+        <!-- ボット対策（人には見えない欄） -->
+        <div class="hp" aria-hidden="true">
+          <label>Webサイト<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <label class="consent">
+          <input type="checkbox" name="consent" value="yes" required>
+          <span data-bind="consent_text"></span>
+        </label>
+        <button class="btn btn-accent btn-block" type="submit">登録する</button>
+        <p class="nl-status" id="nl-status" role="status" aria-live="polite"></p>
+        <p class="nl-note">ご登録いただいたメールアドレスは、活動報告の配信にのみ使用します。登録後に届く確認メールのリンクを開くと登録が完了します。配信停止は各メールの末尾からいつでもできます。</p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <p class="f-name" data-bind="office_name"></p>
+      <p class="f-addr" data-bind="office_address"></p>
+      <p class="f-contact">
+        <span id="f-tel"></span>
+        <span id="f-mail"></span>
+      </p>
+    </div>
+    <ul class="sns-mini" id="sns-mini"></ul>
+  </div>
+  <div class="wrap">
+    <p class="operator">このサイトは <span data-bind="site_operator"></span> が運営しています。</p>
+    <p class="copy">&copy; <span id="year"></span> <span data-bind="office_name"></span></p>
+  </div>
+</footer>
+
+<dialog class="post-dialog" id="post-dialog" aria-labelledby="pd-title">
+  <form method="dialog"><button class="close" aria-label="閉じる">×</button></form>
+  <article>
+    <p class="pd-date" id="pd-date"></p>
+    <h3 id="pd-title"></h3>
+    <img id="pd-img" alt="" hidden>
+    <div class="prose" id="pd-body"></div>
+    <p><a id="pd-link" target="_blank" rel="noopener" hidden>関連リンクを見る</a></p>
+  </article>
+</dialog>
+
+<script src="config.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

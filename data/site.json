@@ -1,0 +1,72 @@
+{
+  "settings": {
+    "candidate_name": "森田 浩文",
+    "candidate_kana": "もりた ひろふみ",
+    "election_label": "佐賀県議会議員選挙 2027",
+    "district": "選挙区：〇〇〇〇",
+    "catchphrase": "【サンプル】ふるさと佐賀の声を、まっすぐ県政へ。",
+    "lead": "【サンプル】ここにご本人の思いを2〜3行で書きます。地域を歩き、聞いた声を形にする——そんな活動を続けています。",
+    "photo_url": "",
+    "bio": "【サンプル】ここに自己紹介文を入れます。生い立ち、これまでの仕事、政治を志したきっかけなどを書きます。\n\n段落を分けたいときは、空行を入れてください。",
+    "newsletter_lead": "日々の活動報告をメールでお届けします。いつでも配信停止できます。",
+    "consent_text": "森田浩文（事務所）から、活動報告および選挙に関する情報（選挙運動用電子メールを含む）をメールで受け取ることに同意します。",
+    "office_name": "森田浩文 事務所",
+    "office_address": "佐賀県〇〇市〇〇町 0-0-0",
+    "office_tel": "0952-00-0000",
+    "office_email": "",
+    "site_operator": "森田浩文 事務所",
+    "site_url": "",
+    "notice_date": "2027-04-02",
+    "election_date": "2027-04-11"
+  },
+  "profile": [
+    { "label": "生年月日", "value": "【要入力】" },
+    { "label": "出身", "value": "【要入力】" },
+    { "label": "学歴", "value": "【要入力】" },
+    { "label": "職歴", "value": "【要入力】" },
+    { "label": "家族", "value": "【要入力】" },
+    { "label": "趣味", "value": "【要入力】" }
+  ],
+  "policies": [
+    { "title": "【サンプル】子育て・教育", "summary": "安心して子どもを産み育てられる佐賀へ。", "detail": "ここに具体的な取り組みを書きます。" },
+    { "title": "【サンプル】地域の産業", "summary": "農業・ものづくりを次の世代へ。", "detail": "ここに具体的な取り組みを書きます。" },
+    { "title": "【サンプル】防災・暮らし", "summary": "災害に強く、誰もが暮らしやすいまちに。", "detail": "ここに具体的な取り組みを書きます。" }
+  ],
+  "history": [
+    { "date": "20XX年", "title": "【サンプル】〇〇の活動を開始", "detail": "活動の内容を書きます。" },
+    { "date": "20XX年", "title": "【サンプル】〇〇に就任", "detail": "活動の内容を書きます。" },
+    { "date": "2026年", "title": "【サンプル】県政への挑戦を表明", "detail": "活動の内容を書きます。" }
+  ],
+  "sns": [
+    { "platform": "instagram", "label": "Instagram", "url": "https://www.instagram.com/" },
+    { "platform": "x", "label": "X（旧Twitter）", "url": "https://x.com/" },
+    { "platform": "facebook", "label": "Facebook", "url": "https://www.facebook.com/" }
+  ],
+  "instagram": [],
+  "posts": [
+    {
+      "id": "sample1",
+      "date": "2026-11-10",
+      "title": "【サンプル】〇〇地区で意見交換会を開きました",
+      "body": "これは活動報告のサンプルです。管理画面から投稿すると、ここに新しい順で表示されます。\n\n改行もそのまま反映されます。URL（https://example.com）は自動でリンクになります。",
+      "image_url": "",
+      "link_url": ""
+    },
+    {
+      "id": "sample2",
+      "date": "2026-11-03",
+      "title": "【サンプル】朝の街頭活動",
+      "body": "これは活動報告のサンプルです。",
+      "image_url": "",
+      "link_url": ""
+    },
+    {
+      "id": "sample3",
+      "date": "2026-10-28",
+      "title": "【サンプル】地域のお祭りに参加しました",
+      "body": "これは活動報告のサンプルです。",
+      "image_url": "",
+      "link_url": ""
+    }
+  ]
+}
