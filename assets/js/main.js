@@ -509,7 +509,8 @@
       for (var i = 0; i < count; i++) {
         var x = rnd(-20, W + 20), u = x / W, z = Math.random();
         // 背の高さ：PC は左（文字の下）を低く、右へ行くほど高く。スマホは面の下半分に
-        var prof = wide ? (0.1 + (hasPhoto ? 0.36 : 0.27) * smooth(0.3, 0.95, u)) : (hasPhoto ? 0.2 : 0.27 + 0.08 * Math.sin(u * 5));
+        // 写真があるときは、手元の稲穂や顔に重ならないよう低くする
+        var prof = wide ? (0.1 + (hasPhoto ? 0.1 : 0.27) * smooth(0.3, 0.95, u)) : (hasPhoto ? 0.13 : 0.27 + 0.08 * Math.sin(u * 5));
         stalks.push({
           x: x, z: z, h: H * prof * rnd(0.55, 1) * (0.62 + 0.38 * z), lean: rnd(-0.07, 0.07), ph: rnd(0, 6.28),
           grains: Math.round(rnd(8, 14)), ear: rnd(26, 46) * (0.6 + 0.5 * z) * (wide ? 1.15 : 0.9), side: Math.random() < 0.5 ? -1 : 1,
