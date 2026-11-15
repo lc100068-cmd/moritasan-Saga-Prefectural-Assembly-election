@@ -440,21 +440,21 @@ h1, h2, h3 {
 /* ============================================================
  * 10-2. 農園とお店 ― わら色の淡い面
  * ============================================================ */
-.farm { background: var(--straw-tint); overflow: hidden; }
+.farm { background: var(--straw-tint); overflow: hidden; padding-block: clamp(64px, 9vw, 120px); }
 .farm-kicker { font-weight: 700; font-size: var(--t-sm); letter-spacing: .3em; color: var(--indigo); margin-bottom: var(--s4); }
 .farm-head h2 { display: flex; flex-direction: column; gap: 10px; line-height: 1.3; }
-.farm-title { font-size: var(--t-2xl); font-weight: 800; letter-spacing: .08em; }
+.farm-title { font-size: var(--t-xl); font-weight: 800; letter-spacing: .08em; }
 .farm-name { font-size: var(--t-lg); letter-spacing: .16em; }
 .farm-body { margin-top: var(--s7); }
-.farm-lead { font-family: var(--mincho); font-weight: 600; font-size: clamp(1.25rem, 1rem + 1.2vw, 1.75rem); line-height: 1.95; letter-spacing: .08em; }
+.farm-lead { font-family: var(--mincho); font-weight: 600; font-size: clamp(1.125rem, 1rem + .6vw, 1.375rem); line-height: 1.95; letter-spacing: .08em; }
 .farm .prose { margin-top: var(--s6); }
-.farm-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s6) var(--s5); margin-top: var(--s8); }
+.farm-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s6) var(--s5); margin-top: var(--s7); }
 .farm-facts li { border-top: 1px solid var(--line-strong); padding-top: var(--s4); }
 .farm .stat-figure { color: var(--ink); }
-.farm .stat-value { font-size: clamp(4rem, 11vw, 7.5rem); }
+.farm .stat-value { font-size: clamp(3rem, 7vw, 4.5rem); }
 .farm .stat-unit { color: var(--ink); }
 .farm .stat-label { color: var(--ink-soft); }
-.farm-shops { display: grid; gap: var(--s4); margin-top: var(--s8); }
+.farm-shops { display: grid; gap: var(--s4); margin-top: var(--s7); }
 .farm-shops li { background: var(--paper); padding: clamp(24px, 4vw, 44px); border-top: 3px solid var(--ink); }
 .shop-no { font-size: var(--t-xs); font-weight: 700; letter-spacing: .3em; color: var(--ink-soft); }
 .farm-shops h3 { margin-top: var(--s3); font-size: var(--t-lg); line-height: 1.6; letter-spacing: .06em; }
@@ -473,7 +473,7 @@ h1, h2, h3 {
 .farm-links a:hover .sns-out { transform: translateX(4px) rotate(45deg); }
 @media (min-width: 900px) {
   .farm-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: var(--s7); align-items: start; }
-  .farm-body { margin-top: 0; padding-top: 34px; }
+  .farm-body { margin-top: 0; padding-top: 30px; }
   .farm-shops { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s5); }
 }
 
@@ -482,14 +482,14 @@ h1, h2, h3 {
  * ============================================================ */
 .insta-head h2 { font-size: var(--t-2xl); letter-spacing: .04em; line-height: 1.2; font-family: var(--num); font-weight: 500; font-feature-settings: normal; }
 .insta-lead { margin: var(--s4) 0 var(--s6); }
-.insta-embed { margin-top: var(--s7); min-height: 320px; display: flex; justify-content: center; align-items: flex-start; }
+.insta-embed { margin: var(--s7) auto 0; width: 100%; max-width: 540px; overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--line); }
 .insta-embed.is-empty { display: none; }
-.insta-embed .instagram-media { margin: 0 !important; min-width: 0 !important; width: 100% !important; max-width: 540px !important; background: #fff; }
-.insta-embed blockquote.instagram-media { padding: var(--s6); border: 1px solid var(--line); text-align: center; }
+.insta-embed .instagram-media { display: block; margin: 0 !important; min-width: 0 !important; width: 100% !important; max-width: 540px !important; background: #fff; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+.insta-embed blockquote.instagram-media { padding: var(--s6); text-align: center; }
 @media (min-width: 900px) {
   .insta-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: var(--s7); align-items: start; }
   .insta-head { position: sticky; top: calc(var(--header-h) + var(--s7)); }
-  .insta-embed { margin-top: 0; }
+  .insta-embed { margin: 0 0 0 auto; }
 }
 
 /* ============================================================

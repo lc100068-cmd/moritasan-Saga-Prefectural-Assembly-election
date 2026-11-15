@@ -42,7 +42,6 @@
     <nav class="gnav" id="gnav" aria-label="ページ内メニュー">
       <a href="#greeting">ごあいさつ</a>
       <a href="#profile">プロフィール</a>
-      <a href="#farm" data-for="farm">農園とお店</a>
       <a href="#vision">目指すこと</a>
       <a href="#history">これまでの活動</a>
       <a href="#reports">活動報告</a>
@@ -175,27 +174,6 @@
     </div>
   </section>
 
-  <!-- 農園とお店（data/site.json の farm があるときだけ表示） -->
-  <section class="section farm" id="farm" aria-labelledby="farm-h" hidden>
-    <div class="wrap">
-      <div class="farm-grid">
-        <header class="farm-head" data-reveal>
-          <p class="sec-no" aria-hidden="true"></p>
-          <p class="farm-kicker">農園とお店</p>
-          <h2 id="farm-h"><span class="farm-title" id="farm-title"></span><span class="farm-name" id="farm-name"></span></h2>
-        </header>
-        <div class="farm-body" data-reveal>
-          <p class="farm-lead" id="farm-lead"></p>
-          <div class="prose" id="farm-text"></div>
-        </div>
-      </div>
-      <ul class="farm-facts" id="farm-facts"></ul>
-      <ul class="farm-shops" id="farm-shops"></ul>
-      <p class="farm-note" id="farm-note"></p>
-      <ul class="farm-links" id="farm-links"></ul>
-    </div>
-  </section>
-
   <!-- 目指すこと -->
   <section class="section vision" id="vision" aria-labelledby="vision-h">
     <div class="wrap">
@@ -262,6 +240,26 @@
       </div>
     </div>
     <div class="wrap"><div class="ig-grid" id="ig-grid" hidden></div></div>
+  </section>
+
+  <!-- 農園とお店（data/site.json の farm があるときだけ表示） -->
+  <section class="section farm" id="farm" aria-labelledby="farm-h" hidden>
+    <div class="wrap">
+      <div class="farm-grid">
+        <header class="farm-head" data-reveal>
+          <p class="farm-kicker">農園とお店</p>
+          <h2 id="farm-h"><span class="farm-title" id="farm-title"></span><span class="farm-name" id="farm-name"></span></h2>
+        </header>
+        <div class="farm-body" data-reveal>
+          <p class="farm-lead" id="farm-lead"></p>
+          <div class="prose" id="farm-text"></div>
+        </div>
+      </div>
+      <ul class="farm-facts" id="farm-facts"></ul>
+      <ul class="farm-shops" id="farm-shops"></ul>
+      <p class="farm-note" id="farm-note"></p>
+      <ul class="farm-links" id="farm-links"></ul>
+    </div>
   </section>
 
   <!-- メルマガ：config.js の NEWSLETTER_ENABLED が true のときだけ表示されます -->

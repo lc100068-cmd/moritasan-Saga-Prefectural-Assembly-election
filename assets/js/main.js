@@ -335,12 +335,22 @@
         el('a', { href: url, target: '_blank', rel: 'noopener', text: 'Instagram で最新の投稿を見る' }),
       ]));
       loadInstagramScript();
-      // 読み込めなかったとき（通信の制限など）は、空の枠を残さない。左の「Instagram を見る」ボタンは残る
-      setTimeout(function () {
+      // 最新の3件（1段目）だけが見えるように、枠の高さを切りそろえる。
+      // Instagram の埋め込みは「プロフィール欄＋投稿6件（3列×2段）」なので、プロフィール欄＋1段ぶんの高さにする。
+      // 6件すべて見せたいときは、INSTAGRAM_ROWS を 2 にする。
+      var INSTAGRAM_ROWS = 1;
+      function fit() {
         var f = $('iframe', box);
-        if (!f || f.offsetHeight < 60) box.classList.add('is-empty');
-        if (f) f.addEventListener('load', function () { setTimeout(function () { if (f.offsetHeight >= 60) box.classList.remove('is-empty'); }, 1500); });
-      }, 9000);
+        if (!f || f.offsetHeight < 200) { box.style.height = ''; return; }
+        var w = f.offsetWidth, row = Math.floor((w - 2) / 3), head = w >= 480 ? 158 : 147;
+        var h = head + row * INSTAGRAM_ROWS + (INSTAGRAM_ROWS - 1);
+        box.style.height = (INSTAGRAM_ROWS >= 2 || h >= f.offsetHeight) ? '' : h + 'px';
+        box.classList.remove('is-empty');
+      }
+      var tries = 0, timer = setInterval(function () { fit(); if (++tries > 40) clearInterval(timer); }, 500);
+      window.addEventListener('resize', fit);
+      // 読み込めなかったとき（通信の制限など）は、空の枠を残さない。左の「Instagram を見る」ボタンは残る
+      setTimeout(function () { var f = $('iframe', box); if (!f || f.offsetHeight < 60) box.classList.add('is-empty'); }, 9000);
     }
     // 読み込みを軽くするため、近くまでスクロールしてから読み込む
     if ('IntersectionObserver' in window) {
