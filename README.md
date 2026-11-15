@@ -57,6 +57,20 @@ gas/appsscript.json     Apps Script の設定
 docs/                   手順書・注意事項
 ```
 
+## サイトだけにある追加の項目（管理画面にはありません）
+次の項目は `data/site.json` に直接書いてあります。管理画面（API）を使うようになっても、この部分は `data/site.json` から読み込まれます。なくてもサイトは動きます。
+
+| 項目 | 内容 |
+|---|---|
+| `settings.candidate_title` | 名前の下に出る肩書き |
+| `message` | ごあいさつの「なぜ、県政へ。」（見出しと本文） |
+| `slogans` | 流れる文字の帯に出す合言葉 |
+| `highlights` | 「数字で見る、これまで。」の数字 |
+| `farm` | 「農園とお店」の欄 |
+
+- メルマガの表示：`config.js` の `NEWSLETTER_ENABLED` を `true` にすると戻ります。
+- SNS で共有したときの画像は `assets/img/ogp.jpg` です。サイトの住所（URL）が変わったら、`index.html` の先頭にある `canonical`・`og:url`・`og:image` の URL も直してください。
+
 ## メモ
 - 現在の文章は **【サンプル】** です。ご本人の確認を経た原稿に差し替えてから公開してください。
 - ふりがな（もりた ひろふみ）は仮入力です。正しい読みを確認してください。

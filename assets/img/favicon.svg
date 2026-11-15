@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 脊振の山並みから昇る朝日（最初の画面の線画と同じモチーフ） -->
+  <rect width="64" height="64" rx="12" fill="#0F1A24"/>
+  <circle cx="32" cy="27" r="10" fill="#DCCB9A"/>
+  <path d="M0 44 C10 40 16 30 26 33 S40 22 50 31 S60 38 64 36 V64 H0 Z" fill="#1D3144"/>
+  <path d="M0 44 C10 40 16 30 26 33 S40 22 50 31 S60 38 64 36" fill="none" stroke="#F5F2EA" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M10 52 H54" fill="none" stroke="#DCCB9A" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+</svg>

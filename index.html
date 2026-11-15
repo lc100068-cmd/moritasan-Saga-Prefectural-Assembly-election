@@ -3,12 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>森田 浩文 | 活動報告・政策</title>
-<meta name="description" content="森田浩文のこれまでの活動と、目指すことをお伝えするサイトです。">
+<title>森田浩文（もりた ひろふみ）｜神埼・吉野ヶ里の声を、県政へ。</title>
+<meta name="description" content="森田浩文（もりた ひろふみ）の活動サイトです。前 吉野ヶ里町議会議員（3期12年）。神埼・吉野ヶ里の声を、県政へ。目指すこと、これまでの歩み、日々の活動報告をお伝えします。">
 <meta name="theme-color" content="#0F1A24">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<!-- SNS で共有されたときの見え方（サイトの住所が変わったら、下の3か所の URL も直してください） -->
+<link rel="canonical" href="https://lc100068-cmd.github.io/moritasan-Saga-Prefectural-Assembly-election/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="森田 浩文 | 活動報告・政策">
-<meta property="og:description" content="森田浩文のこれまでの活動と、目指すことをお伝えするサイトです。">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:site_name" content="森田浩文 活動サイト">
+<meta property="og:title" content="森田浩文（もりた ひろふみ）｜神埼・吉野ヶ里の声を、県政へ。">
+<meta property="og:description" content="前 吉野ヶ里町議会議員（3期12年）。目指すこと、これまでの歩み、日々の活動報告をお伝えします。">
+<meta property="og:url" content="https://lc100068-cmd.github.io/moritasan-Saga-Prefectural-Assembly-election/">
+<meta property="og:image" content="https://lc100068-cmd.github.io/moritasan-Saga-Prefectural-Assembly-election/assets/img/ogp.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
@@ -19,6 +30,8 @@
     var d = document.documentElement, intro = false;
     try { intro = !sessionStorage.getItem('intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
     d.className = 'js' + (intro ? ' is-intro' : ' is-ready');
+    // 文字サイズ（前回えらんだ大きさを、表示の前に反映する）
+    try { if (localStorage.getItem('fs') === 'l') d.setAttribute('data-fs', 'l'); } catch (e) {}
   })();
 </script>
 </head>
@@ -41,13 +54,19 @@
     </button>
     <nav class="gnav" id="gnav" aria-label="ページ内メニュー">
       <a href="#greeting">ごあいさつ</a>
-      <a href="#profile">プロフィール</a>
       <a href="#vision">目指すこと</a>
+      <a href="#profile">プロフィール</a>
       <a href="#history">これまでの活動</a>
       <a href="#reports">活動報告</a>
       <!-- メルマガ：config.js の NEWSLETTER_ENABLED が true のときだけ表示されます -->
       <a href="#newsletter" data-newsletter hidden>メルマガ登録</a>
       <a href="#sns" class="nav-cta">SNSをフォロー</a>
+      <!-- 文字サイズの切り替え（えらんだ大きさは、この端末に保存されます） -->
+      <div class="fs-toggle" role="group" aria-label="文字サイズ">
+        <span class="fs-label" aria-hidden="true">文字サイズ</span>
+        <button type="button" data-fs="m" aria-pressed="true">標準</button>
+        <button type="button" data-fs="l" aria-pressed="false">大</button>
+      </div>
     </nav>
   </div>
 </header>
@@ -127,6 +146,7 @@
       </div>
       <div class="hero-main">
         <h1 class="hero-name" id="hero-name">森田 浩文</h1>
+        <p class="hero-title" data-bind="candidate_title"></p>
         <p class="hero-catch" id="hero-catch"></p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="#vision"><span class="btn-label">目指すことを読む</span><span class="btn-arrow" aria-hidden="true"></span></a>
@@ -140,6 +160,17 @@
   <!-- 流れる文字の帯（飾り。内容はひと言・選挙区と同じ） -->
   <div class="marquee" id="marquee" aria-hidden="true"><div class="marquee-track" id="marquee-track"></div></div>
 
+  <!-- ひと目でわかる、目指すこと（「目指すこと」の見出しだけを並べた一覧。押すと、くわしい説明へ移動） -->
+  <section class="pillars" id="pillars" aria-labelledby="pillars-h" hidden>
+    <div class="wrap">
+      <header class="pillars-head" data-reveal>
+        <h2 id="pillars-h">ひと目でわかる、目指すこと</h2>
+        <a class="text-link" href="#vision">くわしく読む</a>
+      </header>
+      <ol class="pillars-list" id="pillars-list"></ol>
+    </div>
+  </section>
+
   <!-- ごあいさつ -->
   <section class="section greeting" id="greeting" aria-labelledby="greeting-h">
     <div class="wrap greeting-grid">
@@ -149,28 +180,13 @@
       </header>
       <div class="greeting-body" data-reveal>
         <p class="greeting-lead" data-bind="lead"></p>
-        <div class="prose" id="bio"></div>
+        <!-- なぜ、県政へ（data/site.json の message があるときだけ表示） -->
+        <div class="message" id="message" hidden>
+          <h3 id="message-title"></h3>
+          <div class="prose" id="message-body"></div>
+        </div>
         <p class="greeting-sign" data-bind="candidate_name" aria-hidden="true"></p>
       </div>
-    </div>
-  </section>
-
-  <!-- 数字で見る活動（data/site.json の highlights があるときだけ表示） -->
-  <section class="stats" id="stats" aria-label="数字で見る活動" hidden>
-    <div class="wrap"><ul class="stats-list" id="stats-list"></ul></div>
-  </section>
-
-  <!-- プロフィール -->
-  <section class="section profile" id="profile" aria-labelledby="profile-h">
-    <div class="wrap profile-grid">
-      <header class="profile-head" data-reveal>
-        <h2 id="profile-h" data-split>プロフィール</h2>
-        <p class="profile-name">
-          <span data-bind="candidate_name">森田 浩文</span>
-          <small data-bind="candidate_kana"></small>
-        </p>
-      </header>
-      <dl class="facts" id="facts" data-reveal></dl>
     </div>
   </section>
 
@@ -185,16 +201,30 @@
     </div>
   </section>
 
-  <!-- Instagram：最新の投稿（sns に Instagram があるときだけ表示。近くまでスクロールしたら読み込む） -->
-  <section class="section insta" id="instagram" aria-labelledby="insta-h" hidden>
-    <div class="wrap insta-grid">
-      <header class="insta-head" data-reveal>
+  <!-- 数字で見る、これまで（data/site.json の highlights があるときだけ表示） -->
+  <section class="stats" id="stats" aria-labelledby="stats-h" hidden>
+    <div class="wrap">
+      <h2 class="stats-h" id="stats-h" data-reveal>数字で見る、これまで。</h2>
+      <ul class="stats-list" id="stats-list"></ul>
+    </div>
+  </section>
+
+  <!-- プロフィール（自己紹介の文章と、項目の表） -->
+  <section class="section profile" id="profile" aria-labelledby="profile-h">
+    <div class="wrap profile-grid">
+      <header class="profile-head" data-reveal>
         <p class="sec-no" aria-hidden="true"></p>
-        <h2 id="insta-h" data-split>Instagram</h2>
-        <p class="insta-lead">日々の様子を、Instagram でお伝えしています。</p>
-        <p><a class="btn btn-line" id="insta-link" target="_blank" rel="noopener"><span class="btn-label">Instagram を見る</span><span class="sr-only">（新しいタブで開きます）</span><span class="btn-arrow" aria-hidden="true"></span></a></p>
+        <h2 id="profile-h" data-split>プロフィール</h2>
+        <p class="profile-name">
+          <span data-bind="candidate_name">森田 浩文</span>
+          <small data-bind="candidate_kana"></small>
+        </p>
+        <p class="profile-title" data-bind="candidate_title"></p>
       </header>
-      <div class="insta-embed" id="insta-embed" data-reveal></div>
+      <div class="profile-body">
+        <div class="prose" id="bio" data-reveal></div>
+        <dl class="facts" id="facts" data-reveal></dl>
+      </div>
     </div>
   </section>
 
@@ -228,15 +258,39 @@
     </div>
   </section>
 
-  <!-- SNS -->
+  <!-- Instagram：最新の投稿（sns に Instagram があるときだけ表示。近くまでスクロールしたら読み込む） -->
+  <section class="section insta" id="instagram" aria-labelledby="insta-h" hidden>
+    <div class="wrap insta-grid">
+      <header class="insta-head" data-reveal>
+        <p class="sec-no" aria-hidden="true"></p>
+        <h2 id="insta-h" data-split>Instagram</h2>
+        <p class="insta-lead">日々の様子を、Instagram でお伝えしています。</p>
+        <p><a class="btn btn-line" id="insta-link" target="_blank" rel="noopener"><span class="btn-label">Instagram を見る</span><span class="sr-only">（新しいタブで開きます）</span><span class="btn-arrow" aria-hidden="true"></span></a></p>
+      </header>
+      <div class="insta-embed" id="insta-embed" data-reveal></div>
+    </div>
+  </section>
+
+  <!-- SNS（フォローと、ページの共有） -->
   <section class="section sns" id="sns" aria-labelledby="sns-h">
     <div class="wrap sns-grid">
       <header class="sns-head" data-reveal>
-        <h2 id="sns-h"><span>SNSでも</span><span>発信しています</span></h2>
+        <h2 id="sns-h"><span>日々の活動を、</span><span>SNSで。</span></h2>
+        <p class="sns-lead">活動の様子や考えを、SNSで発信しています。フォローしていただくと、最新の投稿が届きます。</p>
       </header>
       <div class="sns-body" data-reveal>
         <ul class="sns-links" id="sns-links"></ul>
         <p class="sns-note" id="sns-note" hidden></p>
+        <div class="share">
+          <p class="share-label" id="share-label">このページを共有する</p>
+          <ul class="share-list" aria-labelledby="share-label">
+            <li><a id="share-line" target="_blank" rel="noopener" aria-label="LINE で共有する（新しいタブで開きます）"><span aria-hidden="true">LINE</span></a></li>
+            <li><a id="share-x" target="_blank" rel="noopener" aria-label="X で共有する（新しいタブで開きます）"><span aria-hidden="true">X</span></a></li>
+            <li><a id="share-fb" target="_blank" rel="noopener" aria-label="Facebook で共有する（新しいタブで開きます）"><span aria-hidden="true">Facebook</span></a></li>
+            <li><button type="button" id="share-copy">リンクをコピー</button></li>
+          </ul>
+          <p class="share-status" id="share-status" role="status" aria-live="polite"></p>
+        </div>
       </div>
     </div>
     <div class="wrap"><div class="ig-grid" id="ig-grid" hidden></div></div>

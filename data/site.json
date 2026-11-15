@@ -17,7 +17,8 @@
     "site_operator": "森田浩文 事務所",
     "site_url": "",
     "notice_date": "2027-04-02",
-    "election_date": "2027-04-11"
+    "election_date": "2027-04-11",
+    "candidate_title": "前 吉野ヶ里町議会議員（副議長）・農園経営"
   },
   "profile": [
     {
@@ -156,6 +157,13 @@
       "link_url": "https://www.facebook.com/hirohumi.morita.9/posts/pfbid0Fyet58nTHJjFzxT2ZkQSMjEfp8bHR2qN2nnEQga5W4PBWJUwjRqEcFUQ8Q3DA3JJl"
     }
   ],
+  "message": {
+    "title": "なぜ、県政へ。",
+    "body": "吉野ヶ里町には、町から選ばれた県議会議員がいません。3期12年、町議会で向き合ってきた地域の声を、直接、県政の場へ届けたい。それが、県政を目指す理由です。\n\n佐賀県は、魅力度ランキングでは下位でも、住む幸せは高い県だと考えています。この地域が持つ力を最大限に生かして、強く、豊かな佐賀へ。"
+  },
+  "slogans": [
+    "強く、豊かに。"
+  ],
   "highlights": [
     {
       "value": "3",
@@ -165,7 +173,7 @@
     {
       "value": "12",
       "unit": "年",
-      "label": "町議会での活動（2014年〜2026年）"
+      "label": "町議会での活動"
     },
     {
       "value": "48",

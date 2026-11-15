@@ -57,6 +57,18 @@
     web: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>',
   };
 
+  /* ---------- 「目指すこと」のアイコン（見出しの言葉から選ぶ。合うものがなければ出さない） ---------- */
+  var POLICY_ICONS = [
+    [/農|食/, '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 42V22"/><path d="M24 27c0-7-5-11-13-11 0 8 5 12 13 11z"/><path d="M24 22c0-8 5-13 13-13 0 9-5 14-13 13z"/><path d="M13 42h22"/></svg>'],
+    [/財政|税|負担|予算/, '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 7v34M14 41h20M9 14h30"/><path d="M9 14L3.5 27a5.5 5.5 0 0 0 11 0z"/><path d="M39 14l-5.5 13a5.5 5.5 0 0 0 11 0z"/></svg>'],
+    [/子ども|こども|若者|教育|学び/, '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 14c-4-3-9-4-17-4v26c8 0 13 1 17 4 4-3 9-4 17-4V10c-8 0-13 1-17 4z"/><path d="M24 14v26"/></svg>'],
+    [/地域|可能性|交通|まち|産業|観光/, '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 43S11 31 11 20.5a13 13 0 0 1 26 0C37 31 24 43 24 43z"/><circle cx="24" cy="20.5" r="4.5"/></svg>'],
+  ];
+  function policyIcon(title) {
+    for (var i = 0; i < POLICY_ICONS.length; i++) if (POLICY_ICONS[i][0].test(String(title || ''))) return POLICY_ICONS[i][1];
+    return '';
+  }
+
   /* ---------- データ取得 ---------- */
   function loadContent() {
     var fromApi = cfg.API_URL
@@ -64,9 +76,18 @@
           .then(function (r) { return r.json(); })
           .then(function (d) { if (d && d.ok && d.data) return d.data; throw new Error('bad response'); })
       : Promise.reject(new Error('no api'));
-    return fromApi.catch(function (err) {
+    var fromFile = function () { return fetch(cfg.FALLBACK_DATA || 'data/site.json').then(function (r) { return r.json(); }); };
+    return fromApi.then(function (data) {
+      // 管理画面（API）が持っていない追加の項目（message / slogans / highlights / farm など）は、site.json から補う
+      return fromFile().then(function (extra) {
+        Object.keys(extra || {}).forEach(function (k) { if (data[k] === undefined) data[k] = extra[k]; });
+        var es = (extra && extra.settings) || {}; data.settings = data.settings || {};
+        Object.keys(es).forEach(function (k) { if (data.settings[k] === undefined) data.settings[k] = es[k]; });
+        return data;
+      }).catch(function () { return data; });
+    }, function (err) {
       if (cfg.API_URL) console.warn('APIから読み込めなかったため、予備データを表示します', err);
-      return fetch(cfg.FALLBACK_DATA || 'data/site.json').then(function (r) { return r.json(); });
+      return fromFile();
     });
   }
 
@@ -140,10 +161,18 @@
       var v = s[n.getAttribute('data-bind')];
       if (v != null && v !== '') n.textContent = v; else if (!n.textContent.trim()) n.hidden = true;
     });
-    if (s.candidate_name) document.title = s.candidate_name + ' | 活動報告・政策';
+    if (s.candidate_name) {
+      document.title = s.candidate_name.replace(/\s+/g, '') + (s.candidate_kana ? '（' + s.candidate_kana + '）' : '') + (s.catchphrase ? '｜' + s.catchphrase : '');
+    }
 
     // ファーストビュー
     renderName($('#hero-name'), s.candidate_name, s.candidate_kana);
+    // 肩書き：「・」「／」のあとで折り返せるように、区切りごとに分ける
+    var heroTitle = $('.hero-title');
+    if (heroTitle && s.candidate_title) {
+      var tw = el('span', { class: 'hero-title-text' }, (String(s.candidate_title).match(/[^・／]+[・／]?/g) || []).map(function (t) { return el('span', { text: t }); }));
+      heroTitle.textContent = ''; heroTitle.appendChild(tw);
+    }
     if (s.catchphrase) {
       fillPhrases($('#hero-catch'), s.catchphrase);
       var vc = $('#hero-vcatch'), vi = 0;
@@ -168,8 +197,20 @@
       img.src = photo;
     }
 
-    // 流れる文字の帯（ひと言と選挙区をくり返す）
-    buildMarquee([s.catchphrase, s.district, s.candidate_name].filter(Boolean));
+    // 流れる文字の帯（ひと言と、合言葉をくり返す。合言葉がなければ選挙区）
+    var slogans = (d.slogans || []).filter(function (t) { return typeof t === 'string' && t.trim(); });
+    buildMarquee([s.catchphrase].concat(slogans.length ? slogans : [s.district]).filter(Boolean));
+
+    // なぜ、県政へ（message があるときだけ）
+    var msg = d.message;
+    if (msg && (msg.title || msg.body)) {
+      $('#message-title').textContent = msg.title || '';
+      $('#message-title').hidden = !msg.title;
+      String(msg.body || '').split(/\n\s*\n/).forEach(function (para) {
+        if (para.trim()) $('#message-body').appendChild(el('p', { text: para.trim() }));
+      });
+      $('#message').hidden = false;
+    }
 
     // リード文：読み進むにつれて濃くなる（1文字ずつに分ける。読み上げは元の文のまま）
     var lead = $('.greeting-lead');
@@ -210,22 +251,36 @@
         el('dd', {}, parts.map(function (t) { return el('span', { text: t }); })),
       ]));
     });
-    if (!facts.children.length) $('#profile').hidden = true;
+    if (!facts.children.length) facts.hidden = true;
+    if (!facts.children.length && !bio.children.length) $('#profile').hidden = true;
 
-    // 目指すこと
-    var pol = $('#policies');
-    (d.policies || []).forEach(function (p, i) {
+    // 目指すこと（番号・アイコンつき）。あわせて、見出しだけの一覧（ひと目でわかる、目指すこと）もつくる
+    var pol = $('#policies'), pillars = $('#pillars-list'), polN = 0;
+    (d.policies || []).forEach(function (p) {
       if (!p.title) return;
-      pol.appendChild(el('li', { class: 'policy', 'data-reveal': '' }, [
-        el('span', { class: 'policy-num', 'aria-hidden': 'true', text: pad2(i + 1) }),
+      var no = pad2(++polN), icon = policyIcon(p.title);
+      pol.appendChild(el('li', { class: 'policy', id: 'policy-' + polN, 'data-reveal': '' }, [
+        el('p', { class: 'policy-mark', 'aria-hidden': 'true' }, [
+          el('span', { class: 'policy-num', text: no }),
+          icon ? el('span', { class: 'policy-icon', html: icon }) : null,
+        ]),
         el('h3', { text: p.title }),
         el('div', { class: 'policy-text' }, [
           p.summary ? el('p', { class: 'summary', text: p.summary }) : null,
           p.detail ? el('p', { class: 'detail', text: p.detail }) : null,
         ]),
       ]));
+      pillars.appendChild(el('li', { 'data-reveal': '', style: '--d:' + ((polN - 1) * 0.08) + 's' }, [
+        el('a', { href: '#policy-' + polN }, [
+          el('span', { class: 'pillar-no', 'aria-hidden': 'true', text: no }),
+          icon ? el('span', { class: 'pillar-icon', html: icon }) : null,
+          el('span', { class: 'pillar-title', text: p.title }),
+          el('span', { class: 'pillar-arrow', 'aria-hidden': 'true' }),
+        ]),
+      ]));
     });
     if (!pol.children.length) $('#vision').hidden = true;
+    $('#pillars').hidden = !pillars.children.length;
 
     // 年表（「2014年」「2026年2月」は、年の数字を大きく見せる）
     var tl = $('#timeline');
@@ -444,6 +499,7 @@
     }
 
     renderInstagramProfile(sns);
+    setupShare();
 
     // 個別の投稿の埋め込み（管理画面の「サイトに埋め込む Instagram 投稿」）
     var grid = $('#ig-grid');
@@ -458,6 +514,45 @@
     });
     loadInstagramScript();
   }
+
+  /* ---------- このページを共有する ---------- */
+  var shareReady = false;
+  function setupShare() {
+    if (shareReady) return; shareReady = true;
+    var url = location.origin + location.pathname, u = encodeURIComponent(url), t = encodeURIComponent(document.title);
+    $('#share-line').href = 'https://social-plugins.line.me/lineit/share?url=' + u;
+    $('#share-x').href = 'https://twitter.com/intent/tweet?url=' + u + '&text=' + t;
+    $('#share-fb').href = 'https://www.facebook.com/sharer/sharer.php?u=' + u;
+    $('#share-copy').addEventListener('click', function () {
+      var status = $('#share-status');
+      function done(ok) { status.textContent = ok ? 'リンクをコピーしました。' : 'コピーできませんでした。アドレス欄の URL をコピーしてください。'; }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(false); });
+      } else {
+        var ta = el('textarea', { class: 'sr-only', readonly: '' });
+        ta.value = url; document.body.appendChild(ta); ta.select();
+        var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+        ta.parentNode.removeChild(ta); done(ok);
+      }
+    });
+  }
+
+  /* ---------- 文字サイズの切り替え（標準／大） ---------- */
+  (function () {
+    var btns = $$('.fs-toggle button');
+    function apply(v) {
+      if (v === 'l') document.documentElement.setAttribute('data-fs', 'l'); else document.documentElement.removeAttribute('data-fs');
+      btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-fs') === v)); });
+    }
+    apply(document.documentElement.getAttribute('data-fs') === 'l' ? 'l' : 'm');
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var v = b.getAttribute('data-fs'); apply(v);
+        try { localStorage.setItem('fs', v); } catch (e) {}
+        setTimeout(function () { measureMarquee(); onScroll(); }, 50);
+      });
+    });
+  })();
 
   /* ---------- メルマガ登録 ---------- */
   var nlForm = $('#nl-form');
@@ -503,7 +598,7 @@
   });
   // 画面を広げたら、開いたままのメニューを閉じる
   if (window.matchMedia) {
-    var wide = window.matchMedia('(min-width: 960px)');
+    var wide = window.matchMedia('(min-width: 1080px)');
     var onWide = function (e) { if (e.matches) setMenu(false); };
     if (wide.addEventListener) wide.addEventListener('change', onWide); else if (wide.addListener) wide.addListener(onWide);
   }
@@ -578,8 +673,9 @@
     lastY = y;
 
     if (leadChars.length) {
+      // 画面に入りはじめてから、段落の下端が画面の下から2割ほどの位置に来るまでに、すべて濃くなる
       var r = leadChars[0].parentNode.getBoundingClientRect();
-      var p = (vh * 0.88 - r.top) / (r.height + vh * 0.38);
+      var p = (vh * 0.96 - r.top) / (r.height + vh * 0.16);
       var n = Math.max(0, Math.min(leadChars.length, Math.round(p * leadChars.length)));
       for (; leadOn < n; leadOn++) leadChars[leadOn].classList.add('on');
       for (; leadOn > n; leadOn--) leadChars[leadOn - 1].classList.remove('on');
@@ -628,9 +724,9 @@
       setTimeout(function () { intro.classList.remove('is-out'); }, 1000);
     }
     var fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-    var minWait = new Promise(function (r) { setTimeout(r, 1500); });
+    var minWait = new Promise(function (r) { setTimeout(r, 1000); });
     Promise.all([fontsReady, minWait]).then(finish);
-    setTimeout(finish, 3200); // フォントが遅くても、ここで必ず開ける
+    setTimeout(finish, 2600); // フォントが遅くても、ここで必ず開ける
   })();
 
   loadContent().then(render).catch(function (err) {
