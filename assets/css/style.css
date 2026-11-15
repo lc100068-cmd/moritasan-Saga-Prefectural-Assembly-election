@@ -1,6 +1,6 @@
 /* ============================================================
  * 森田浩文 活動サイト ― 「風と稲穂」
- * 夜の藍に、生成りの文字と、わら色の稲穂。差し色（柿）はボタンだけ。
+ * 夜の藍に、生成りの文字と、わら色の線画（神埼・吉野ヶ里の風景）。差し色（柿）はボタンだけ。
  *
  * 1. 全体の設計（色・文字・余白の基準）
  *    ここを変えると、サイト全体の雰囲気が変わります。
@@ -237,7 +237,7 @@ h1, h2, h3 {
 
 /* ============================================================
  * 6. 最初の画面
- *    夜の藍の全面に、特大の名前。下から稲穂が風にゆれる。
+ *    夜の藍の全面に、特大の名前。山並み・物見やぐら・水車の線画が描かれていく。
  *    写真があるとき：スマホは上、PC は右に大きく。ないとき：縦書きのひと言。
  * ============================================================ */
 .hero {
@@ -264,9 +264,42 @@ h1, h2, h3 {
 }
 .hero.has-photo .hero-visual::before { content: ""; position: absolute; z-index: 1; inset: 0 0 auto 0; height: 110px; background: linear-gradient(to bottom, rgba(15, 26, 36, .6), rgba(15, 26, 36, 0)); pointer-events: none; }
 
-/* 稲穂のアニメーション（canvas）。スマホは上の面いっぱい、PC は画面いっぱい */
-.hero-field { position: absolute; left: 0; top: 0; width: 100%; height: var(--hero-visual-h); pointer-events: none; opacity: 0; transition: opacity 2s var(--ease) .4s; }
-.is-ready .hero-field { opacity: 1; }
+/* 地域のモチーフの線画（SVG）。スマホは写真の下端に重ね、PC は名前の上の空間いっぱいに置く */
+.hero-scene { position: absolute; z-index: 1; left: 0; right: 0; top: calc(var(--hero-visual-h) - 32vw); height: 32vw; max-height: 240px; pointer-events: none; overflow: hidden; }
+/* スマホ：写真に重なるので、朝日と星は出さず、遠くの山は線だけにする */
+.sc-sun, .sc-stars, .sc-fill-far { display: none; }
+.hero-scene svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--straw); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.hero-scene svg * { vector-effect: non-scaling-stroke; }
+.sc-fill { fill: #0F1A24; stroke: none; }
+.sc-fill-far { fill: #14222F; }
+.sc-ridge-far { stroke-opacity: .55; }
+.sc-ridge-near { stroke-opacity: .34; }
+.sc-sun-glow { stroke: none; }
+.sc-line { stroke-opacity: .7; }
+.sc-build path { fill: #0F1A24; }
+.sc-fence { stroke-opacity: .55; }
+.sc-stars circle { fill: var(--straw); stroke: none; opacity: .5; animation: twinkle 3.6s ease-in-out infinite; }
+.sc-stars circle:nth-child(3n) { animation-delay: -1.2s; } .sc-stars circle:nth-child(3n+1) { animation-delay: -2.4s; }
+.sc-sun-disc { fill: var(--straw); stroke: none; }
+.sc-sun { transform: translateY(90px); }
+.is-ready .sc-sun { animation: sunrise 5s var(--ease-out) .6s both; }
+.sc-wheel { transform-box: fill-box; transform-origin: center; animation: wheel 18s linear infinite; }
+.sc-wheel circle:nth-of-type(3) { fill: var(--straw); stroke: none; }
+.sc-river path { stroke-opacity: .45; stroke-dasharray: 26 14; animation: river 2.8s linear infinite; }
+.sc-water { stroke-dasharray: 4 5; stroke-opacity: .8; animation: river 1s linear infinite reverse; }
+/* 線が、描かれるように現れる */
+.js .hero-scene .draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.is-ready .hero-scene .draw { animation: draw 2.6s cubic-bezier(.6, 0, .2, 1) both; }
+.is-ready .hero-scene .sc-ridge-far { animation-delay: .2s; } .is-ready .hero-scene .sc-ridge-near { animation-delay: .5s; }
+.is-ready .hero-scene .sc-line { animation-delay: .7s; } .is-ready .hero-scene .sc-build .draw { animation-delay: 1.1s; }
+.is-ready .hero-scene .sc-tower .draw { animation-delay: 1.4s; } .is-ready .hero-scene .sc-wheel .draw { animation-delay: 1.6s; }
+.js .sc-stars, .js .sc-fence, .js .sc-river, .js .sc-water, .js .sc-wheel > path:last-child, .js .sc-wheel circle:nth-of-type(3) { opacity: 0; }
+.is-ready .sc-stars, .is-ready .sc-fence, .is-ready .sc-river, .is-ready .sc-water, .is-ready .sc-wheel > path:last-child, .is-ready .sc-wheel circle:nth-of-type(3) { opacity: 1; transition: opacity 1.6s var(--ease) 2.4s; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes sunrise { from { transform: translateY(90px); } to { transform: translateY(0); } }
+@keyframes wheel { to { transform: rotate(360deg); } }
+@keyframes river { to { stroke-dashoffset: -40; } }
+@keyframes twinkle { 50% { opacity: .12; } }
 
 /* 写真がない間：縦書きのひと言 */
 .hero-vcatch {
@@ -283,7 +316,7 @@ h1, h2, h3 {
 .is-ready .hero-vcatch .ch { opacity: 1; transform: none; }
 .hero.has-photo .hero-vcatch { display: none; }
 
-.hero-text { position: relative; z-index: 2; flex: 1 0 auto; display: flex; flex-direction: column; padding: 14px var(--gutter) 44px; }
+.hero-text { z-index: 2; flex: 1 0 auto; display: flex; flex-direction: column; padding: 14px var(--gutter) 44px; }
 .hero-eyebrow { display: flex; flex-direction: column; gap: 1px; font-size: .75rem; font-weight: 500; line-height: 1.7; letter-spacing: .16em; color: var(--straw); }
 .hero-eyebrow span:first-child { font-weight: 700; }
 .hero-main { margin-top: 16px; }
@@ -323,11 +356,14 @@ h1, h2, h3 {
     inset: 0; height: auto;
     background: linear-gradient(to bottom, rgba(15, 26, 36, .78), rgba(15, 26, 36, 0) 24%), linear-gradient(to top, rgba(15, 26, 36, .72), rgba(15, 26, 36, 0) 36%);
   }
-  .hero-field { height: 100%; }
+  /* PC：名前の上の空いた空間を、風景で満たす（左端は画面の端まで） */
+  .sc-sun, .sc-stars, .sc-fill-far { display: inline; }
+  .hero-scene { position: relative; top: auto; max-height: none; overflow: visible; left: auto; right: auto; height: auto; flex: 1 1 0; min-height: 140px; margin: 20px -24px 30px calc(var(--gutter) * -1);
+    -webkit-mask-image: linear-gradient(to right, #000 72%, transparent); mask-image: linear-gradient(to right, #000 72%, transparent); }
   .hero-vcatch { top: calc(var(--header-h) + 36px); font-size: min(clamp(2rem, 3.4vw, 3.25rem), calc((min(100svh, 1000px) * .6 - var(--header-h)) / (var(--n, 12) * 1.22))); }
   .hero-text { position: absolute; inset: 0 auto 0 0; width: 62%; padding: calc(var(--header-h) + 40px) 24px clamp(64px, 12vh, 112px) var(--gutter); }
   .hero-eyebrow { font-size: .8125rem; }
-  .hero-main { margin-top: auto; }
+  .hero-main { margin-top: 0; }
   .hero-name { font-size: clamp(4.5rem, 10.2vw, 10.5rem); line-height: 1.04; }
   .np-kana { font-size: .875rem; margin-bottom: 12px; letter-spacing: .6em; }
   .hero-catch { margin-top: 30px; font-size: clamp(1.25rem, 1.9vw, 1.75rem); }
@@ -687,9 +723,12 @@ h1, h2, h3 {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
-  .js [data-reveal], .js .hero-eyebrow, .js .np-kana, .js .hero-catch, .js .hero-actions, .js .hero-scroll, .hero-field { opacity: 1; transform: none; }
+  .js [data-reveal], .js .hero-eyebrow, .js .np-kana, .js .hero-catch, .js .hero-actions, .js .hero-scroll { opacity: 1; transform: none; }
   .split .ch > span, .np-kanji .ch > span, .hero-vcatch .ch { transform: none; opacity: 1; }
   .hero.has-photo .hero-visual { clip-path: none; }
+  .js .hero-scene .draw { stroke-dasharray: none; stroke-dashoffset: 0; }
+  .sc-sun { transform: none; }
+  .js .sc-stars, .js .sc-fence, .js .sc-river, .js .sc-water, .js .sc-wheel > path:last-child, .js .sc-wheel circle:nth-of-type(3) { opacity: 1; }
   .hero-photo { transform: none; }
   .policy::before, .js .sec-no::after { transform: none; }
   .greeting-lead .ch { opacity: 1; }
@@ -699,7 +738,7 @@ h1, h2, h3 {
   .gnav a { opacity: 1; transform: none; }
 }
 @media print {
-  .site-header, .progress, .intro, .marquee, .hero-field, .hero-actions, .hero-scroll, .reports-foot, .post-arrow { display: none !important; }
+  .site-header, .progress, .intro, .marquee, .hero-scene, .hero-actions, .hero-scroll, .reports-foot, .post-arrow { display: none !important; }
   .js [data-reveal], .greeting-lead .ch { opacity: 1; transform: none; }
   .hero { min-height: 0; height: auto; }
 }

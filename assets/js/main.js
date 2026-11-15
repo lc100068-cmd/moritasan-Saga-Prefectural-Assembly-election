@@ -164,7 +164,7 @@
     var img = $('#photo');
     if (photo) {
       img.alt = (s.candidate_name || '').replace(/\s+/g, '');
-      img.addEventListener('load', function () { img.hidden = false; $('#hero').classList.add('has-photo'); if (window.__field) window.__field.resize(); });
+      img.addEventListener('load', function () { img.hidden = false; $('#hero').classList.add('has-photo'); });
       img.src = photo;
     }
 
@@ -584,104 +584,13 @@
   }
   window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
 
-  /* ---------- 稲穂が風にゆれる（canvas） ---------- */
-  function Field(canvas) {
-    var ctx = canvas.getContext('2d'), W = 0, H = 0, stalks = [], pointer = { x: -9999, v: 0 }, visible = true, self = this;
-    function rnd(a, b) { return a + Math.random() * (b - a); }
-    function smooth(a, b, x) { x = Math.max(0, Math.min(1, (x - a) / (b - a))); return x * x * (3 - 2 * x); }
-    this.resize = function () {
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      W = canvas.clientWidth; H = canvas.clientHeight;
-      if (!W || !H) return;
-      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var wide = W >= 900, hasPhoto = $('#hero').classList.contains('has-photo');
-      var count = Math.max(46, Math.min(190, Math.round(W / (wide ? 8 : 6.5))));
-      stalks = [];
-      for (var i = 0; i < count; i++) {
-        var x = rnd(-20, W + 20), u = x / W, z = Math.random();
-        // 背の高さ：PC は左（文字の下）を低く、右へ行くほど高く。スマホは面の下半分に
-        // 写真があるときは、手元の稲穂や顔に重ならないよう低くする
-        var prof = wide ? (0.1 + (hasPhoto ? 0.1 : 0.27) * smooth(0.3, 0.95, u)) : (hasPhoto ? 0.13 : 0.27 + 0.08 * Math.sin(u * 5));
-        stalks.push({
-          x: x, z: z, h: H * prof * rnd(0.55, 1) * (0.62 + 0.38 * z), lean: rnd(-0.07, 0.07), ph: rnd(0, 6.28),
-          grains: Math.round(rnd(8, 14)), ear: rnd(26, 46) * (0.6 + 0.5 * z) * (wide ? 1.15 : 0.9), side: Math.random() < 0.5 ? -1 : 1,
-          leaf: rnd(0.3, 0.6), leafLen: rnd(24, 60),
-        });
-      }
-      stalks.sort(function (a, b) { return a.z - b.z; });
-      self.draw(performance.now());
-    };
-    this.draw = function (t) {
-      if (!W) return;
-      ctx.clearRect(0, 0, W, H);
-      pointer.v *= 0.94;
-      for (var i = 0; i < stalks.length; i++) {
-        var s = stalks[i];
-        // 風：ゆっくりした大きな波＋細かい波。ポインターの動きで、近くの穂がなびく
-        var wind = Math.sin(t * 0.0009 + s.x * 0.0052 + s.ph * 0.25) * 0.55 + Math.sin(t * 0.0017 + s.x * 0.012 + s.ph) * 0.3;
-        var dx = (s.x - pointer.x) / 160;
-        wind += pointer.v * Math.exp(-dx * dx) * 0.05;
-        var bend = (wind * 0.13 + s.lean + 0.05) * s.h;
-        var bx = s.x, by = H + 4, tx = s.x + bend, ty = H - s.h;
-        var cx = s.x + bend * 0.12, cy = H - s.h * 0.55;
-        var a = 0.16 + s.z * 0.62;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = 'rgba(206,196,150,' + a + ')';
-        ctx.lineWidth = 0.7 + s.z * 0.9;
-        ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo(cx, cy, tx, ty); ctx.stroke();
-        // 葉
-        var lt = s.leaf, lx = (1 - lt) * (1 - lt) * bx + 2 * (1 - lt) * lt * cx + lt * lt * tx, ly = (1 - lt) * (1 - lt) * by + 2 * (1 - lt) * lt * cy + lt * lt * ty;
-        ctx.beginPath(); ctx.moveTo(lx, ly);
-        ctx.quadraticCurveTo(lx + s.side * s.leafLen * 0.5 + bend * 0.2, ly - s.leafLen * 0.7, lx + s.side * s.leafLen + bend * 0.5, ly - s.leafLen * 0.35 + Math.abs(wind) * 6);
-        ctx.stroke();
-        // 穂：先がたれて、粒が並ぶ
-        var dir = bend >= 0 ? 1 : -1, droop = 0.55 + Math.abs(wind) * 0.25;
-        ctx.fillStyle = 'rgba(226,203,140,' + Math.min(1, a + 0.12) + ')';
-        var px = tx, py = ty;
-        for (var g = 0; g < s.grains; g++) {
-          var q = g / s.grains;
-          var gx = tx + dir * s.ear * (q * 0.9) + bend * 0.04 * q;
-          var gy = ty + s.ear * droop * q * q * 1.5 - s.ear * 0.08 * q;
-          var ang = Math.atan2(gy - py, gx - px) + (g % 2 ? 0.6 : -0.6);
-          var off = (g % 2 ? 1 : -1) * (1.6 + s.z * 1.6);
-          ctx.save();
-          ctx.translate(gx - Math.sin(ang) * off * 0.4, gy + Math.cos(ang) * off * 0.6);
-          ctx.rotate(ang);
-          ctx.beginPath(); ctx.ellipse(0, 0, 2.6 + s.z * 2.4, 1 + s.z * 1.1, 0, 0, 6.2832); ctx.fill();
-          ctx.restore();
-          px = gx; py = gy;
-        }
-      }
-    };
-    this.setVisible = function (v) { visible = v; };
-    this.isVisible = function () { return visible; };
-    window.addEventListener('pointermove', function (e) {
-      var r = canvas.getBoundingClientRect();
-      var x = e.clientX - r.left;
-      if (pointer.x > -9000) pointer.v = Math.max(-40, Math.min(40, pointer.v + (x - pointer.x) * 0.25));
-      pointer.x = x;
-    }, { passive: true });
-  }
-
-  var field = null, fieldCanvas = $('#field');
-  if (fieldCanvas && fieldCanvas.getContext) {
-    field = window.__field = new Field(fieldCanvas);
-    field.resize();
-    if ('IntersectionObserver' in window) new IntersectionObserver(function (en) { field.setVisible(en[0].isIntersecting); }).observe(fieldCanvas);
-  }
-  var resizeTimer = null, lastW = window.innerWidth;
+  var resizeTimer = null;
   window.addEventListener('resize', function () {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () {
-      measureMarquee();
-      // スマホのアドレスバーの出入り（高さだけの変化）では作り直さない
-      if (field && window.innerWidth !== lastW) { lastW = window.innerWidth; field.resize(); }
-      onScroll();
-    }, 150);
+    resizeTimer = setTimeout(function () { measureMarquee(); onScroll(); }, 150);
   });
 
-  /* ---------- 毎フレームの処理（帯と稲穂）。動きを減らす設定のときは止める ---------- */
+  /* ---------- 毎フレームの処理（流れる文字の帯）。動きを減らす設定のときは止める ---------- */
   var lastT = 0;
   function frame(t) {
     var dt = Math.min(64, t - (lastT || t)); lastT = t;
@@ -692,7 +601,6 @@
       if (marquee.x > 0) marquee.x -= marquee.unit;
       marquee.track.style.transform = 'translate3d(' + marquee.x.toFixed(2) + 'px,0,0)';
     }
-    if (field && field.isVisible() && !document.hidden) field.draw(t);
     requestAnimationFrame(frame);
   }
   if (!reduceMotion) requestAnimationFrame(frame);

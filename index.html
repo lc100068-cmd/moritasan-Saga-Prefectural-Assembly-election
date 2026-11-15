@@ -54,18 +54,78 @@
 </header>
 
 <main id="main">
-  <!-- ファーストビュー：特大の名前・ひと言・ボタン1つ・写真。背景に、風にゆれる稲穂のアニメーション -->
+  <!-- ファーストビュー：特大の名前・ひと言・ボタン1つ・写真。背景に、神埼・吉野ヶ里の風景の線画アニメーション -->
   <section class="hero" id="hero" aria-labelledby="hero-name">
     <div class="hero-visual">
       <img class="hero-photo" id="photo" alt="" width="1200" height="1500" decoding="async" fetchpriority="high" hidden>
       <p class="hero-vcatch" id="hero-vcatch"></p>
     </div>
-    <canvas class="hero-field" id="field" aria-hidden="true"></canvas>
     <div class="hero-text">
       <p class="hero-eyebrow">
         <span data-bind="election_label"></span>
         <span data-bind="district"></span>
       </p>
+      <!-- 地域のモチーフ（飾り）：脊振の山並みと朝日、吉野ヶ里遺跡の物見やぐら・高床倉庫・竪穴住居、神埼の水車と川 -->
+      <div class="hero-scene" aria-hidden="true">
+        <svg viewBox="0 0 1200 320" preserveAspectRatio="xMinYMax meet" focusable="false">
+          <defs>
+            <radialGradient id="sun-glow"><stop offset="0" stop-color="#DCCB9A" stop-opacity=".5"/><stop offset="1" stop-color="#DCCB9A" stop-opacity="0"/></radialGradient>
+          </defs>
+          <g class="sc-stars">
+            <circle cx="150" cy="52" r="1.6"/><circle cx="262" cy="24" r="1.2"/><circle cx="356" cy="76" r="1.4"/><circle cx="468" cy="36" r="1.7"/><circle cx="548" cy="88" r="1.1"/>
+            <circle cx="742" cy="30" r="1.5"/><circle cx="838" cy="70" r="1.2"/><circle cx="934" cy="26" r="1.6"/><circle cx="1042" cy="62" r="1.3"/><circle cx="1128" cy="34" r="1.1"/>
+          </g>
+          <!-- 朝日（山の向こうから昇る） -->
+          <g class="sc-sun"><circle class="sc-sun-glow" cx="640" cy="104" r="92" fill="url(#sun-glow)"/><circle class="sc-sun-disc" cx="640" cy="104" r="42"/></g>
+          <!-- 脊振の山並み（遠景・近景） -->
+          <path class="sc-fill sc-fill-far" d="M-20 236 C60 222 120 196 190 204 S300 158 372 170 S470 126 536 142 S632 92 700 118 S800 150 862 140 S960 176 1030 164 S1150 204 1220 190 S1500 150 1640 172 S2000 214 2400 200 V330 H-20 Z"/><path class="sc-ridge sc-ridge-far draw" pathLength="1" d="M-20 236 C60 222 120 196 190 204 S300 158 372 170 S470 126 536 142 S632 92 700 118 S800 150 862 140 S960 176 1030 164 S1150 204 1220 190 S1500 150 1640 172 S2000 214 2400 200"/>
+          <path class="sc-fill" d="M-20 270 C70 262 150 240 240 250 S400 222 500 240 S660 214 760 236 S930 222 1020 244 S1160 252 1220 246 S1500 228 1700 248 S2100 240 2400 250 V330 H-20 Z"/><path class="sc-ridge sc-ridge-near draw" pathLength="1" d="M-20 270 C70 262 150 240 240 250 S400 222 500 240 S660 214 760 236 S930 222 1020 244 S1160 252 1220 246 S1500 228 1700 248 S2100 240 2400 250"/>
+          <!-- 川の流れ（城原川・田手川のイメージ） -->
+          <g class="sc-river">
+            <path d="M600 304 q30 -6 60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0"/>
+            <path d="M560 314 q30 -6 60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0"/>
+          </g>
+          <!-- 地面 -->
+          <path class="sc-line draw" pathLength="1" d="M-20 290 H2400"/>
+          <!-- 環壕集落の柵 -->
+          <path class="sc-fence" d="M214 290 V278 M226 290 V276 M238 290 V278 M250 290 V277 M262 290 V278 M274 290 V276 M286 290 V278 M298 290 V277 M426 290 V278 M438 290 V277 M592 290 V278 M604 290 V276 M616 290 V278 M628 290 V277"/>
+          <!-- 竪穴住居 -->
+          <g class="sc-build">
+            <path class="draw" pathLength="1" d="M506 290 L536 252 L566 290 Z"/><path class="draw" pathLength="1" d="M530 252 L536 244 L542 252 M528 290 V274 H544 V290"/>
+            <path class="draw" pathLength="1" d="M158 290 L184 258 L210 290 Z"/><path class="draw" pathLength="1" d="M179 258 L184 251 L189 258"/>
+          </g>
+          <!-- 高床倉庫 -->
+          <g class="sc-build">
+            <path class="draw" pathLength="1" d="M452 290 V262 M466 290 V262 M480 290 V262 M494 290 V262"/>
+            <path class="draw" pathLength="1" d="M446 262 H500 V244 H446 Z"/>
+            <path class="draw" pathLength="1" d="M438 246 L456 220 H490 L508 246 Z"/>
+            <path class="draw" pathLength="1" d="M452 220 L460 210 M494 220 L486 210 M500 290 L490 262"/>
+          </g>
+          <!-- 物見やぐら -->
+          <g class="sc-build sc-tower">
+            <path class="draw" pathLength="1" d="M330 290 L338 204 M360 290 V204 M390 290 L382 204"/>
+            <path class="draw" pathLength="1" d="M333 262 H387 M335 234 H385 M334 262 L385 234 M386 262 L335 234"/>
+            <path class="draw" pathLength="1" d="M322 204 H398 V198 H322 Z"/>
+            <path class="draw" pathLength="1" d="M326 198 V184 H394 V198 M343 198 V184 M360 198 V184 M377 198 V184"/>
+            <path class="draw" pathLength="1" d="M334 184 V170 H386 V184"/>
+            <path class="draw" pathLength="1" d="M316 172 L338 138 H382 L404 172 Z"/>
+            <path class="draw" pathLength="1" d="M332 138 L342 124 M388 138 L378 124 M338 138 L330 126 M382 138 L390 126"/>
+            <path class="draw" pathLength="1" d="M410 290 L396 204 M407.500 274 H401 M405 258 H398.500 M402.500 242 H396.500 M400 226 H394.500"/>
+          </g>
+          <!-- 神埼の水車と水車小屋 -->
+          <g class="sc-build">
+            <path class="draw" pathLength="1" d="M884 290 V240 H948 V290 M876 242 L916 214 L956 242 M904 290 V266 H920 V290"/>
+            <path class="draw" pathLength="1" d="M960 206 H842 M846 206 V214 M960 206 V290 M940 206 V214"/>
+            <path class="draw" pathLength="1" d="M822 290 L840 250 L858 290"/>
+          </g>
+          <g class="sc-wheel">
+            <circle class="draw" pathLength="1" cx="840" cy="250" r="38"/><circle class="draw" pathLength="1" cx="840" cy="250" r="30"/><circle cx="840" cy="250" r="5"/>
+            <path class="draw" pathLength="1" d="M840 212 V288 M802 250 H878 M813.100 223.100 L866.900 276.900 M813.100 276.900 L866.900 223.100"/>
+            <path d="M840 206 V218 M840 282 V294 M796 250 H808 M872 250 H884 M808.900 218.900 L817.400 227.400 M862.600 272.600 L871.100 281.100 M808.900 281.100 L817.400 272.600 M862.600 227.400 L871.100 218.900"/>
+          </g>
+          <path class="sc-water" d="M843 208 V236"/>
+        </svg>
+      </div>
       <div class="hero-main">
         <h1 class="hero-name" id="hero-name">森田 浩文</h1>
         <p class="hero-catch" id="hero-catch"></p>

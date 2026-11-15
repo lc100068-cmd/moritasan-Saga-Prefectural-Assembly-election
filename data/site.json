@@ -220,24 +220,9 @@
         "url": "https://www.yoshinogariyasai.com/"
       },
       {
-        "platform": "web",
-        "label": "野菜の通販",
-        "url": "https://yoshinogariyasaishop.com/"
-      },
-      {
-        "platform": "instagram",
-        "label": "Instagram",
-        "url": "https://www.instagram.com/aichannouen/"
-      },
-      {
         "platform": "facebook",
         "label": "Facebook",
         "url": "https://www.facebook.com/inakayasai/"
-      },
-      {
-        "platform": "x",
-        "label": "X",
-        "url": "https://twitter.com/aichannouen/"
       }
     ]
   }
