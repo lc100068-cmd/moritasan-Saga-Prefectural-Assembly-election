@@ -475,6 +475,7 @@ h1, h2, h3 {
   .farm-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: var(--s7); align-items: start; }
   .farm-body { margin-top: 0; padding-top: 30px; }
   .farm-shops { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s5); }
+  .farm-shops li:only-child { grid-column: 1 / -1; }
 }
 
 /* ============================================================

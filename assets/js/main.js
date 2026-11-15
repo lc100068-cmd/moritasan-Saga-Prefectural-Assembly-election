@@ -292,7 +292,7 @@
     (f.shops || []).forEach(function (sh, i) {
       if (!sh || !sh.name) return;
       $('#farm-shops').appendChild(el('li', { 'data-reveal': '', style: '--d:' + (i * 0.12) + 's' }, [
-        el('p', { class: 'shop-no', 'aria-hidden': 'true', text: 'お店 ' + pad2(i + 1) }),
+        el('p', { class: 'shop-no', 'aria-hidden': 'true', text: (f.shops.length > 1 ? 'お店 ' + pad2(i + 1) : '直営のお店') }),
         el('h3', { text: sh.name }),
         sh.place ? el('p', { class: 'shop-place', text: sh.place }) : null,
         sh.desc ? el('p', { class: 'shop-desc', text: sh.desc }) : null,
