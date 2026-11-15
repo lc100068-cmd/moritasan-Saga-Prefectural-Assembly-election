@@ -335,16 +335,16 @@
         el('a', { href: url, target: '_blank', rel: 'noopener', text: 'Instagram で最新の投稿を見る' }),
       ]));
       loadInstagramScript();
-      // 最新の3件（1段目）だけが見えるように、枠の高さを切りそろえる。
-      // Instagram の埋め込みは「プロフィール欄＋投稿6件（3列×2段）」なので、プロフィール欄＋1段ぶんの高さにする。
-      // 6件すべて見せたいときは、INSTAGRAM_ROWS を 2 にする。
-      var INSTAGRAM_ROWS = 1;
+      // 最新の6件（3列×2段）が見えるように、枠の高さを切りそろえる。
+      // Instagram の埋め込みは「プロフィール欄＋投稿6件（3列×2段）＋下のリンク」なので、プロフィール欄＋2段ぶんの高さにする。
+      // 3件（1段）だけにしたいときは、INSTAGRAM_ROWS を 1 にする。6件より多くは出せない。
+      var INSTAGRAM_ROWS = 2;
       function fit() {
         var f = $('iframe', box);
         if (!f || f.offsetHeight < 200) { box.style.height = ''; return; }
         var w = f.offsetWidth, row = Math.floor((w - 2) / 3), head = w >= 480 ? 158 : 147;
         var h = head + row * INSTAGRAM_ROWS + (INSTAGRAM_ROWS - 1);
-        box.style.height = (INSTAGRAM_ROWS >= 2 || h >= f.offsetHeight) ? '' : h + 'px';
+        box.style.height = h >= f.offsetHeight ? '' : h + 'px';
         box.classList.remove('is-empty');
       }
       var tries = 0, timer = setInterval(function () { fit(); if (++tries > 40) clearInterval(timer); }, 500);
