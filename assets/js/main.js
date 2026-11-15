@@ -245,8 +245,10 @@
     });
     if (!tl.children.length) $('#history').hidden = true;
 
+    renderFarm(d.farm);
     renderPosts(d.posts || []);
     renderSns(d.sns || [], d.instagram || []);
+    numberSections();
 
     // フッター（連絡先の表示欄）
     if (s.office_tel) { $('#f-tel').textContent = ''; $('#f-tel').appendChild(el('a', { href: 'tel:' + s.office_tel.replace(/[^\d+]/g, ''), text: s.office_tel })); }
@@ -255,6 +257,96 @@
 
     observeReveal();
     onScroll();
+  }
+
+  /* ---------- 農園とお店（farm があるときだけ） ---------- */
+  function linkItem(r) {
+    var url = safeUrl(r.url); if (!url) return null;
+    return el('li', {}, [el('a', { href: url, target: '_blank', rel: 'noopener' }, [
+      el('span', { class: 'sns-icon', html: ICONS[r.platform] || ICONS.web }),
+      el('span', { class: 'sns-label', text: r.label || r.platform }),
+      el('span', { class: 'sr-only', text: '（新しいタブで開きます）' }),
+      el('span', { class: 'sns-out', 'aria-hidden': 'true' }),
+    ])]);
+  }
+  function renderFarm(f) {
+    var sec = $('#farm'), navLink = $('.gnav [data-for="farm"]');
+    if (!f || (!f.title && !f.name && !f.lead)) { if (navLink) navLink.hidden = true; return; }
+    sec.hidden = false;
+    $('#farm-title').textContent = f.title || '';
+    $('#farm-name').textContent = f.name || '';
+    $('#farm-lead').textContent = f.lead || '';
+    String(f.body || '').split(/\n\s*\n/).forEach(function (para) {
+      if (para.trim()) $('#farm-text').appendChild(el('p', { text: para.trim() }));
+    });
+    (f.facts || []).forEach(function (h, i) {
+      if (!h || h.value == null || h.value === '') return;
+      $('#farm-facts').appendChild(el('li', { 'data-reveal': '', style: '--d:' + (i * 0.12) + 's' }, [
+        el('p', { class: 'stat-figure' }, [
+          el('span', { class: 'stat-value', 'data-count': String(h.value), text: String(h.value) }),
+          h.unit ? el('span', { class: 'stat-unit', text: h.unit }) : null,
+        ]),
+        h.label ? el('p', { class: 'stat-label', text: h.label }) : null,
+      ]));
+    });
+    (f.shops || []).forEach(function (sh, i) {
+      if (!sh || !sh.name) return;
+      $('#farm-shops').appendChild(el('li', { 'data-reveal': '', style: '--d:' + (i * 0.12) + 's' }, [
+        el('p', { class: 'shop-no', 'aria-hidden': 'true', text: 'お店 ' + pad2(i + 1) }),
+        el('h3', { text: sh.name }),
+        sh.place ? el('p', { class: 'shop-place', text: sh.place }) : null,
+        sh.desc ? el('p', { class: 'shop-desc', text: sh.desc }) : null,
+      ]));
+    });
+    $('#farm-note').textContent = f.note || ''; $('#farm-note').hidden = !f.note;
+    (f.links || []).forEach(function (r) { var li = linkItem(r); if (li) $('#farm-links').appendChild(li); });
+    ['#farm-facts', '#farm-shops', '#farm-links'].forEach(function (q) { $(q).hidden = !$(q).children.length; });
+  }
+
+  /** セクション番号（01, 02, …）を、表示されている順に振る */
+  function numberSections() {
+    var n = 0;
+    $$('main > section').forEach(function (sec) {
+      var no = $('.sec-no', sec);
+      if (!no || sec.hidden) return;
+      no.textContent = pad2(++n);
+    });
+  }
+
+  /* ---------- Instagram：プロフィールの埋め込み（最新の投稿が自動で並ぶ） ---------- */
+  function loadInstagramScript() {
+    if (window.instgrm && window.instgrm.Embeds) { window.instgrm.Embeds.process(); return; }
+    if ($('script[data-ig-embed]')) return;
+    var sc = document.createElement('script');
+    sc.async = true; sc.src = 'https://www.instagram.com/embed.js'; sc.setAttribute('data-ig-embed', '');
+    sc.onload = function () { if (window.instgrm) window.instgrm.Embeds.process(); };
+    document.body.appendChild(sc);
+  }
+  function renderInstagramProfile(sns) {
+    var ig = sns.filter(function (r) { return r.platform === 'instagram' && /^https:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._]+\/?(\?.*)?$/.test(safeUrl(r.url)); })[0];
+    if (!ig) return;
+    var url = safeUrl(ig.url).split('?')[0].replace(/\/?$/, '/');
+    var sec = $('#instagram'), box = $('#insta-embed');
+    sec.hidden = false;
+    $('#insta-link').href = url;
+    function mount() {
+      if (box.children.length) return;
+      box.appendChild(el('blockquote', { class: 'instagram-media', 'data-instgrm-permalink': url, 'data-instgrm-version': '14' }, [
+        el('a', { href: url, target: '_blank', rel: 'noopener', text: 'Instagram で最新の投稿を見る' }),
+      ]));
+      loadInstagramScript();
+      // 読み込めなかったとき（通信の制限など）は、空の枠を残さない。左の「Instagram を見る」ボタンは残る
+      setTimeout(function () {
+        var f = $('iframe', box);
+        if (!f || f.offsetHeight < 60) box.classList.add('is-empty');
+        if (f) f.addEventListener('load', function () { setTimeout(function () { if (f.offsetHeight >= 60) box.classList.remove('is-empty'); }, 1500); });
+      }, 9000);
+    }
+    // 読み込みを軽くするため、近くまでスクロールしてから読み込む
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (en) { if (en[0].isIntersecting) { io.disconnect(); mount(); } }, { rootMargin: '800px 0px' });
+      io.observe(sec);
+    } else mount();
   }
 
   var allPosts = [], shown = 0;
@@ -341,6 +433,9 @@
       links.hidden = true; mini.hidden = true;
     }
 
+    renderInstagramProfile(sns);
+
+    // 個別の投稿の埋め込み（管理画面の「サイトに埋め込む Instagram 投稿」）
     var grid = $('#ig-grid');
     var urls = igPosts.map(function (r) { return safeUrl(r.url); }).filter(function (u) { return /instagram\.com\/(p|reel|tv)\//.test(u); });
     if (!urls.length) return;
@@ -351,10 +446,7 @@
         el('a', { href: clean, target: '_blank', rel: 'noopener', text: 'Instagramで見る' }),
       ]));
     });
-    var sc = document.createElement('script');
-    sc.async = true; sc.src = 'https://www.instagram.com/embed.js';
-    sc.onload = function () { if (window.instgrm) window.instgrm.Embeds.process(); };
-    document.body.appendChild(sc);
+    loadInstagramScript();
   }
 
   /* ---------- メルマガ登録 ---------- */

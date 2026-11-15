@@ -42,6 +42,7 @@
     <nav class="gnav" id="gnav" aria-label="ページ内メニュー">
       <a href="#greeting">ごあいさつ</a>
       <a href="#profile">プロフィール</a>
+      <a href="#farm" data-for="farm">農園とお店</a>
       <a href="#vision">目指すこと</a>
       <a href="#history">これまでの活動</a>
       <a href="#reports">活動報告</a>
@@ -84,7 +85,7 @@
   <section class="section greeting" id="greeting" aria-labelledby="greeting-h">
     <div class="wrap greeting-grid">
       <header class="greeting-head" data-reveal>
-        <p class="sec-no" aria-hidden="true">01</p>
+        <p class="sec-no" aria-hidden="true"></p>
         <h2 id="greeting-h" data-split>ごあいさつ</h2>
       </header>
       <div class="greeting-body" data-reveal>
@@ -114,14 +115,48 @@
     </div>
   </section>
 
+  <!-- 農園とお店（data/site.json の farm があるときだけ表示） -->
+  <section class="section farm" id="farm" aria-labelledby="farm-h" hidden>
+    <div class="wrap">
+      <div class="farm-grid">
+        <header class="farm-head" data-reveal>
+          <p class="sec-no" aria-hidden="true"></p>
+          <p class="farm-kicker">農園とお店</p>
+          <h2 id="farm-h"><span class="farm-title" id="farm-title"></span><span class="farm-name" id="farm-name"></span></h2>
+        </header>
+        <div class="farm-body" data-reveal>
+          <p class="farm-lead" id="farm-lead"></p>
+          <div class="prose" id="farm-text"></div>
+        </div>
+      </div>
+      <ul class="farm-facts" id="farm-facts"></ul>
+      <ul class="farm-shops" id="farm-shops"></ul>
+      <p class="farm-note" id="farm-note"></p>
+      <ul class="farm-links" id="farm-links"></ul>
+    </div>
+  </section>
+
   <!-- 目指すこと -->
   <section class="section vision" id="vision" aria-labelledby="vision-h">
     <div class="wrap">
       <header class="vision-head" data-reveal>
-        <p class="sec-no" aria-hidden="true">02</p>
+        <p class="sec-no" aria-hidden="true"></p>
         <h2 id="vision-h" data-split>目指すこと</h2>
       </header>
       <ol class="policies" id="policies"></ol>
+    </div>
+  </section>
+
+  <!-- Instagram：最新の投稿（sns に Instagram があるときだけ表示。近くまでスクロールしたら読み込む） -->
+  <section class="section insta" id="instagram" aria-labelledby="insta-h" hidden>
+    <div class="wrap insta-grid">
+      <header class="insta-head" data-reveal>
+        <p class="sec-no" aria-hidden="true"></p>
+        <h2 id="insta-h" data-split>Instagram</h2>
+        <p class="insta-lead">日々の様子を、Instagram でお伝えしています。</p>
+        <p><a class="btn btn-line" id="insta-link" target="_blank" rel="noopener"><span class="btn-label">Instagram を見る</span><span class="sr-only">（新しいタブで開きます）</span><span class="btn-arrow" aria-hidden="true"></span></a></p>
+      </header>
+      <div class="insta-embed" id="insta-embed" data-reveal></div>
     </div>
   </section>
 
@@ -129,7 +164,7 @@
   <section class="section history" id="history" aria-labelledby="history-h">
     <div class="wrap history-grid">
       <header class="history-head" data-reveal>
-        <p class="sec-no" aria-hidden="true">03</p>
+        <p class="sec-no" aria-hidden="true"></p>
         <h2 id="history-h" data-split>これまでの活動</h2>
       </header>
       <div class="history-body">
@@ -143,7 +178,7 @@
   <section class="section reports" id="reports" aria-labelledby="reports-h">
     <div class="wrap">
       <header class="reports-head" data-reveal>
-        <div><p class="sec-no" aria-hidden="true">04</p>
+        <div><p class="sec-no" aria-hidden="true"></p>
         <h2 id="reports-h" data-split>活動報告</h2></div>
         <p>日々の活動を、新しい順にお伝えします。</p>
       </header>
